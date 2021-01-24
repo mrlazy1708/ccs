@@ -39,7 +39,7 @@ class Cjack {
                                 RESOURCE_ENERGY,
                             ]);
                         } else {
-                            target = Game.rooms[`W47S29`].controller;
+                            target = Game.rooms[`E47S29`].controller;
                             this.kernel.execute(creep.id, `moveTo`, [
                                 target.id,
                             ]);
