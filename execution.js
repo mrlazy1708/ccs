@@ -50,6 +50,12 @@ class Execution {
             }
         }
     }
+    call(type, ...data) {
+        let cpu_usage_start = Game.cpu.getUsed(),
+            ret = this.object[type](...data);
+        this.kernel.efficiency += Game.cpu.getUsed() - cpu_usage_start;
+        return ret;
+    }
     idle() {
         return true;
     }
@@ -57,9 +63,9 @@ class Execution {
         let target = Game.getObjectById(id),
             ret;
         if (target) {
-            ret = this.object[this.type](target, ...data);
+            ret = this.call(this.type, target, ...data);
         } else {
-            ret = this.object[this.type](id, ...data);
+            ret = this.call(this.type, id, ...data);
         }
         this.log += ` -> ${Dye(Meaning[-ret], `Red`)}`;
         if (ret == OK) {
@@ -86,7 +92,7 @@ class Execution {
             this.kernel.add1(Game.creeps[name].id);
             return true;
         } else {
-            let ret = this.object.spawnCreep(body, name, opts);
+            let ret = this.call(`spawnCreep`, body, name, opts);
             this.log += ` -> ${Dye(Meaning[-ret], `Red`)}`;
             if (ret == OK) {
                 this.memory.start = true;
