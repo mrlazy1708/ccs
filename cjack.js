@@ -11,7 +11,7 @@ class Cjack {
     run() {
         _.forEach(this.memory.jacks, (id) => {
             let creep = Game.getObjectById(id);
-            if (creep) {
+            if (creep instanceof Creep) {
                 let exec = this.kernel.oei[id];
                 if (!exec || exec.type == `idle`) {
                     if (creep.store.getFreeCapacity() > 0) {
@@ -29,6 +29,7 @@ class Cjack {
                             FIND_MY_SPAWNS
                         );
                         if (
+                            target &&
                             target.store.getFreeCapacity(RESOURCE_ENERGY) > 20
                         ) {
                             this.kernel.execute(creep.id, `moveTo`, [

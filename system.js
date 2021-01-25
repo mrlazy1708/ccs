@@ -1,5 +1,3 @@
-const Blackbox = require("./blackbox");
-
 `use strict`;
 
 class System {
@@ -42,29 +40,30 @@ class System {
         global.Dye = (string, color) =>
             `<b style="color:${color}">${string}</b>`;
 
-        // this.blackbox = new Blackbox(this.memory);
         this.kernels = _.mapValues(
-            this.memory,
-            (_, name) => new Kernel(name, this.memory)
+            (this.memory.kernels = this.memory.kernels || {}),
+            (_, name) => new Kernel(name, this.memory.kernels)
         );
+        this.blackbox = new Blackbox(this.memory);
     }
     init() {
         Game.system = this;
         this.memory = Memory[this.name];
-        _.forEach(this.kernels, (kernel) => kernel.init(this.memory));
+        _.forEach(this.kernels, (kernel) => kernel.init(this.memory.kernels));
+        this.blackbox.init(this.memory);
     }
     run() {
         _.forEach(this.kernels, (kernel) => kernel.run());
-        // this.blackbox.run();
+        this.blackbox.run();
     }
     shut() {
         _.forEach(this.kernels, (kernel) => kernel.shut());
     }
     reset() {
-        Memory.creeps = {};
-        Memory[this.name] = {};
-        this.kernels[`k0`] = new Kernel(`k0`, Memory[this.name]);
-        this.kernels[`k0`].init(Memory[this.name]);
+        delete Memory[this.name].kernels[`k0`];
+        this.kernels[`k0`] = new Kernel(`k0`, this.memory.kernels);
+        this.kernels[`k0`].init(this.memory.kernels);
+        _.forEach(Game.creeps, (creep) => this.kernels[`k0`].add1(creep.id));
         this.kernels[`k0`].add2(Game.spawns[`Spawn1`].id);
     }
     spawn(name) {
@@ -73,9 +72,6 @@ class System {
             [WORK, CARRY, MOVE],
             name,
         ]);
-    }
-    reg(name) {
-        this.kernels[`k0`].add1(Game.creeps[name].id);
     }
 }
 

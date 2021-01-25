@@ -1,5 +1,3 @@
-const Cspawn = require("./cspawn");
-
 `use strict`;
 
 class Kernel {

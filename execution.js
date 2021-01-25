@@ -8,6 +8,11 @@ class Execution {
     init(memory) {
         this.memory = memory[this.id];
         this.oem = this.memory.oem;
+
+        this.object = Game.getObjectById(this.id);
+        if (!this.object) {
+            this.kernel.remove(this.id);
+        }
     }
     run() {
         this.log = `${this.id}> ${Dye(this.type, `White`)}: ${JSON.stringify(
@@ -18,22 +23,19 @@ class Execution {
         return ret;
     }
     exec() {
-        if (Game.getObjectById(this.id)) {
-            this.object = Game.getObjectById(this.id);
-            if (this.try_catch()) {
-                this.log += ` -> ${Dye(`Finish`, `Yellow`)}`;
-                try {
-                    this.object.say(Dictionary[this.type][1], true);
-                } catch (err) {}
-                this.memory.oem.shift();
-                return this.type != `idle`;
-            } else {
-                this.log += ` -> ${Dye(`Continue`, `Blue`)}`;
-                try {
-                    this.object.say(Dictionary[this.type][0], true);
-                } catch (err) {}
-                return true;
-            }
+        if (this.try_catch()) {
+            this.log += ` -> ${Dye(`Finish`, `Yellow`)}`;
+            try {
+                this.object.say(Dictionary[this.type][1], true);
+            } catch (err) {}
+            this.memory.oem.shift();
+            return this.type != `idle`;
+        } else {
+            this.log += ` -> ${Dye(`Continue`, `Blue`)}`;
+            try {
+                this.object.say(Dictionary[this.type][0], true);
+            } catch (err) {}
+            return true;
         }
     }
     try_catch() {
