@@ -1,3 +1,5 @@
+const Blackbox = require("./blackbox");
+
 `use strict`;
 
 class System {
@@ -5,6 +7,7 @@ class System {
         this.name = name;
         this.memory = Memory[this.name] = Memory[this.name] || {};
 
+        global.Blackbox = require(`blackbox`);
         global.Kernel = require(`kernel`);
         global.Heap = require(`heap`);
         global.Execution = require(`execution`);
@@ -39,6 +42,7 @@ class System {
         global.Dye = (string, color) =>
             `<b style="color:${color}">${string}</b>`;
 
+        // this.blackbox = new Blackbox(this.memory);
         this.kernels = _.mapValues(
             this.memory,
             (_, name) => new Kernel(name, this.memory)
@@ -51,11 +55,13 @@ class System {
     }
     run() {
         _.forEach(this.kernels, (kernel) => kernel.run());
+        // this.blackbox.run();
     }
     shut() {
         _.forEach(this.kernels, (kernel) => kernel.shut());
     }
     reset() {
+        Memory.creeps = {};
         Memory[this.name] = {};
         this.kernels[`k0`] = new Kernel(`k0`, Memory[this.name]);
         this.kernels[`k0`].init(Memory[this.name]);
