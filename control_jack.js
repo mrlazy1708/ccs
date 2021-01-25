@@ -1,18 +1,21 @@
 `use strict`;
 
-class Cjack {
+class Control_jack {
     constructor(memory, kernel) {
-        this.memory = memory.cjack = memory.cjack || { jacks: [], queued: 0 };
+        this.memory = memory.control_jack = memory.control_jack || {
+            jacks: [],
+            queued: 0,
+        };
         this.kernel = kernel;
     }
     init(memory) {
-        this.memory = memory.cjack;
+        this.memory = memory.control_jack;
     }
     run() {
         _.forEach(this.memory.jacks, (id) => {
             let creep = Game.getObjectById(id);
             if (creep instanceof Creep) {
-                let exec = this.kernel.oei[id];
+                let exec = this.kernel.executions[id];
                 if (!exec || exec.type == `idle`) {
                     if (creep.store.getFreeCapacity() > 0) {
                         let target = creep.pos.findClosestByPath(FIND_SOURCES);
@@ -55,7 +58,10 @@ class Cjack {
             }
         });
         if (this.size < 10) {
-            this.kernel.cspawn.smh.push([Game.time, [WORK, CARRY, MOVE]]);
+            this.kernel.control_spawn.smh.push([
+                Game.time,
+                [WORK, CARRY, MOVE],
+            ]);
             this.memory.queued++;
         }
     }
@@ -71,4 +77,4 @@ class Cjack {
     }
 }
 
-module.exports = Cjack;
+module.exports = Control_jack;

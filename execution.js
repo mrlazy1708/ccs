@@ -7,7 +7,7 @@ class Execution {
     }
     init(memory) {
         this.memory = memory[this.id];
-        this.oem = this.memory.oem;
+        this.execution_queue = this.memory.execution_queue;
 
         this.object = Game.getObjectById(this.id);
         if (!this.object) {
@@ -18,17 +18,17 @@ class Execution {
         this.log = `${this.id}> ${Dye(this.type, `White`)}: ${JSON.stringify(
             this.data
         )}`;
-        let ret = this.exec();
+        let ret = this.execute();
         console.log(this.log);
         return ret;
     }
-    exec() {
+    execute() {
         if (this.try_catch()) {
             this.log += ` -> ${Dye(`Finish`, `Yellow`)}`;
             try {
                 this.object.say(Dictionary[this.type][1], true);
             } catch (err) {}
-            this.memory.oem.shift();
+            this.memory.execution_queue.shift();
             return this.type != `idle`;
         } else {
             this.log += ` -> ${Dye(`Continue`, `Blue`)}`;
@@ -94,14 +94,14 @@ class Execution {
             return false;
         }
     }
-    get oec() {
-        return this.oem[0] || {};
+    get executing() {
+        return this.execution_queue[0] || {};
     }
     get type() {
-        return this.oec.type || `idle`;
+        return this.executing.type || `idle`;
     }
     get data() {
-        return this.oec.data;
+        return this.executing.data;
     }
 }
 

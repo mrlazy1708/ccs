@@ -5,78 +5,83 @@ class Kernel {
         this.name = name;
         this.memory = memory[this.name] = memory[this.name] || {};
 
-        this.oms = this.memory.oms = this.memory.oms || {};
-        this.oei = _.mapValues(this.oms, (_, key) => new Execution(key, this));
-
-        this.oemh = new Heap(
-            `oemh`,
-            this.memory,
-            (oem_1, oem_2) => oem_1.let < oem_2.let
+        this.object_memory = this.memory.object = this.memory.object || {};
+        this.executions = _.mapValues(
+            this.object_memory,
+            (_, key) => new Execution(key, this)
         );
 
-        this.cjack = new Cjack(this.memory, this);
-        this.cspawn = new Cspawn(this.memory, this);
+        this.execution_heap = new Heap(
+            `execution_heap`,
+            this.memory,
+            (element_1, element_2) => element_1.last_run < element_2.last_run
+        );
+
+        this.control_jack = new Control_jack(this.memory, this);
+        this.control_spawn = new Control_spawn(this.memory, this);
     }
     init(memory) {
         this.memory = memory[this.name];
 
-        this.oms = this.memory.oms;
-        _.forEach(this.oei, (oei) => oei.init(this.oms));
+        this.object_memory = this.memory.object;
+        _.forEach(this.executions, (execution) =>
+            execution.init(this.object_memory)
+        );
 
-        this.oemh.init(this.memory);
+        this.execution_heap.init(this.memory);
 
-        this.cjack.init(this.memory);
-        this.cspawn.init(this.memory);
+        this.control_jack.init(this.memory);
+        this.control_spawn.init(this.memory);
     }
     run() {
-        this.cjack.run();
-        this.cspawn.run();
+        this.control_jack.run();
+        this.control_spawn.run();
 
         for (
-            let oem = this.oemh.top;
-            oem && oem.let < Game.time && Game.cpu.getUsed() < 5;
-            oem = this.oemh.top
+            let element = this.execution_heap.top;
+            element && element.last_run < Game.time && Game.cpu.getUsed() < 5;
+            element = this.execution_heap.top
         ) {
-            this.oemh.pop();
-            if (this.memory.oms[oem.id]) {
-                if (this.oei[oem.id]) {
-                    if (this.oei[oem.id].run()) {
-                        this.oemh.push({ let: Game.time, id: oem.id });
-                    } else {
-                        console.log(`finish~`);
-                    }
+            this.execution_heap.pop();
+            let execution = this.executions[element.id];
+            if (execution instanceof Execution) {
+                if (execution.run()) {
+                    this.execution_heap.push({
+                        last_run: Game.time,
+                        id: element.id,
+                    });
+                } else {
+                    console.log(`finish~`);
                 }
-            } else {
-                console.log(`missing!`);
             }
         }
     }
     shut() {}
     add1(id) {
-        this.oms[id] = { oem: [] };
-        this.oei[id] = new Execution(id, this);
-        this.oei[id].init(this.oms);
+        this.object_memory[id] = { execution_queue: [] };
+        this.executions[id] = new Execution(id, this);
+        this.executions[id].init(this.object_memory);
 
-        this.cjack.add(id);
+        this.control_jack.add(id);
     }
     add2(id) {
-        this.oms[id] = { oem: [] };
-        this.oei[id] = new Execution(id, this);
-        this.oei[id].init(this.oms);
+        this.object_memory[id] = { execution_queue: [] };
+        this.executions[id] = new Execution(id, this);
+        this.executions[id].init(this.object_memory);
 
-        this.cspawn.add(id);
+        this.control_spawn.add(id);
     }
     execute(id, type, data) {
-        let oei = this.oei[id];
-        if (oei.type == `idle`) {
-            this.oemh.push({ let: Game.time, id: id });
+        let execution = this.executions[id];
+        if (execution.type == `idle`) {
+            this.execution_heap.push({ last_run: Game.time, id: id });
         }
-        this.oms[id].oem.push({ type: type, data: data });
+        this.object_memory[id].execution_queue.push({ type: type, data: data });
     }
     remove(id) {
-        this.cjack.remove(id);
-        delete this.oms[id];
-        delete this.oei[id];
+        this.control_jack.remove(id);
+        delete this.object_memory[id];
+        delete this.executions[id];
     }
 }
 

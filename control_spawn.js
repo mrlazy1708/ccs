@@ -1,14 +1,16 @@
 `use strict`;
 
-class Cspawn {
+class Control_spawn {
     constructor(memory, kernel) {
-        this.memory = memory.cspawn = memory.cspawn || { spawns: [] };
+        this.memory = memory.control_spawn = memory.control_spawn || {
+            spawns: [],
+        };
         this.kernel = kernel;
 
         this.smh = new Heap(`smh`, this.memory, (sm1, sm2) => sm1[0] > sm2[0]);
     }
     init(memory) {
-        this.memory = memory.cspawn;
+        this.memory = memory.control_spawn;
         this.smh.init(this.memory);
     }
     run() {
@@ -17,7 +19,7 @@ class Cspawn {
             if (config) {
                 let spawn = Game.getObjectById(id);
                 if (spawn) {
-                    let exec = this.kernel.oei[id];
+                    let exec = this.kernel.executions[id];
                     if (!exec || exec.type == `idle`) {
                         this.smh.pop();
                         config.shift();
@@ -33,4 +35,4 @@ class Cspawn {
     }
 }
 
-module.exports = Cspawn;
+module.exports = Control_spawn;
