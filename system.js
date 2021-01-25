@@ -74,6 +74,7 @@ class System {
         this.kernels[`k0`] = new Kernel(`k0`, this.memory.kernels);
         this.kernels[`k0`].init(this.memory.kernels);
         _.forEach(Game.creeps, (creep) => this.kernels[`k0`].add1(creep.id));
+        this.kernels[`k0`].control_jack.memory.queued = 0;
         this.kernels[`k0`].add2(Game.spawns[`Spawn1`].id);
     }
     spawn(name) {
