@@ -63,7 +63,7 @@ class Cjack {
         this.memory.queued--; //spawn非正常死亡
     }
     remove(id) {
-        _.remove(this.memory, (value) => value == id);
+        _.remove(this.memory.jacks, (value) => value == id);
     }
     get size() {
         return this.memory.jacks.length + this.memory.queued;
