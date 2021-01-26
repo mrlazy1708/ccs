@@ -4,7 +4,7 @@ class Execution {
     constructor(id, kernel) {
         this.id = id;
         this.kernel = kernel;
-    }
+    } // 是否可继续
     init(memory) {
         this.memory = memory[this.id];
         this.execution_queue = this.memory.execution_queue;

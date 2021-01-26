@@ -10,29 +10,28 @@ function import_module() {
 }
 
 function define_constant() {
-    global.Meaning = [
-        `OK`,
-        `ERR_NOT_OWNER`,
-        `ERR_NO_PATH`,
-        `ERR_NAME_EXISTS`,
-        `ERR_BUSY`,
-        `ERR_NOT_FOUND`,
-        `ERR_NOT_ENOUGH_RESOURCES`,
-        `ERR_INVALID_TARGET`,
-        `ERR_FULL`,
-        `ERR_NOT_IN_RANGE`,
-        `ERR_INVALID_ARGS`,
-        `ERR_TIRED`,
-        `ERR_NO_BODYPART`,
-        `ERR_NOT_ENOUGH_EXTENSIONS`,
-        `ERR_RCL_NOT_ENOUGH`,
-        `ERR_GCL_NOT_ENOUGH`,
-    ];
+    // prettier-ignore
+    global.Meaning = [`OK`,`ERR_NOT_OWNER`,`ERR_NO_PATH`,`ERR_NAME_EXISTS`,`ERR_BUSY`,`ERR_NOT_FOUND`,`ERR_NOT_ENOUGH_RESOURCES`,`ERR_INVALID_TARGET`,`ERR_FULL`,`ERR_NOT_IN_RANGE`,`ERR_INVALID_ARGS`,`ERR_TIRED`,`ERR_NO_BODYPART`,`ERR_NOT_ENOUGH_EXTENSIONS`,`ERR_RCL_NOT_ENOUGH`,`ERR_GCL_NOT_ENOUGH`,];
     global.Dictionary = {
         moveTo: [`🚗`, `🎯`],
         harvest: [`⛏`, `🈵`],
         transfer: [`🛢`, `🈳`],
         upgradeController: [`🔋`, `🈳`],
+    };
+    // prettier-ignore
+    global.Faces = {
+        boy: ['👨','👨🏻','👨🏼','👨🏽','👨🏾','👨🏿','👨‍🦱','👨🏻‍🦱','👨🏼‍🦱','👨🏽‍🦱','👨🏾‍🦱','👨🏿‍🦱','👨‍🦰','👨🏻‍🦰','👨🏼‍🦰','👨🏽‍🦰','👨🏾‍🦰','👨🏿‍🦰','👱‍♂️','👱🏻‍♂️','👱🏼‍♂️','👱🏽‍♂️','👱🏾‍♂️','👱🏿‍♂️','👨‍🦳','👨🏻‍🦳','👨🏼‍🦳','👨🏽‍🦳','👨🏾‍🦳','👨🏿‍🦳','👨‍🦲','👨🏻‍🦲','👨🏼‍🦲','👨🏽‍🦲','👨🏾‍🦲','👨🏿‍🦲',],
+        girl: ['👩','👩🏻','👩🏼','👩🏽','👩🏾','👩🏿','👩‍🦱','👩🏻‍🦱','👩🏼‍🦱','👩🏽‍🦱','👩🏾‍🦱','👩🏿‍🦱','👩‍🦰','👩🏻‍🦰','👩🏼‍🦰','👩🏽‍🦰','👩🏾‍🦰','👩🏿‍🦰','👱‍♀️','👱🏻‍♀️','👱🏼‍♀️','👱🏽‍♀️','👱🏾‍♀️','👱🏿‍♀️','👩‍🦳','👩🏻‍🦳','👩🏼‍🦳','👩🏽‍🦳','👩🏾‍🦳','👩🏿‍🦳','👩‍🦲','👩🏻‍🦲','👩🏼‍🦲','👩🏽‍🦲','👩🏾‍🦲','👩🏿‍🦲',],
+    };
+    // prettier-ignore
+    global.Names = {
+        last: [`Smith`,`Johnson`,`Williams`,`Brown`,`Jones`,`Garcia`,`Miller`,`Davis`,`Rodriguez`,`Martinez`,`Hernandez`,`Lopez`,`Gonzalez`,`Wilson`,`Anderson`,`Thomas`,`Taylor`,`Moore`,`Jackson`,`Martin`,`Lee`,`Perez`,`Thompson`,`White`,`Harris`,`Sanchez`,`Clark`,`Ramirez`,`Lewis`,`Robinson`,`Walker`,`Young`,`Allen`,`King`,`Wright`,`Scott`,`Torres`,`Nguyen`,`Hill`,`Flores`,`Green`,`Adams`,`Nelson`,`Baker`,`Hall`,`Rivera`,`Campbell`,`Mitchell`,`Carter`,`Roberts`,],
+        first: {
+            boy: [  `Liam`,`Noah`,`Oliver`,`William`,`Elijah`,`James`,`Benjamin`,`Lucas`,`Mason`,`Ethan`,`Alexander`,`Henry`,`Jacob`,`Michael`,`Daniel`,`Logan`,`Jackson`,`Sebastian`,`Jack`,`Aiden`,`Owen`,`Samuel`,`Matthew`,`Joseph`,`Levi`,`Mateo`,`David`,`John`,`Wyatt`,`Carter`,`Julian`,`Luke`,`Grayson`,`Isaac`,`Jayden`,`Theodore`,`Gabriel`,`Anthony`,`Dylan`,`Leo`,`Lincoln`,`Jaxon`,`Asher`,`Christopher`,`Josiah`,`Andrew`,`Thomas`,`Joshua`,`Ezra`,`Hudson`,
+                    `Charles`,`Caleb`,`Isaiah`,`Ryan`,`Nathan`,`Adrian`,`Christian`,`Maverick`,`Colton`,`Elias`,`Aaron`,`Eli`,`Landon`,`Jonathan`,`Nolan`,`Hunter`,`Cameron`,`Connor`,`Santiago`,`Jeremiah`,`Ezekiel`,`Angel`,`Roman`,`Easton`,`Miles`,`Robert`,`Jameson`,`Nicholas`,`Greyson`,`Cooper`,`Ian`,`Carson`,`Axel`,`Jaxson`,`Dominic`,`Leonardo`,`Luca`,`Austin`,`Jordan`,`Adam`,`Xavier`,`Jose`,`Jace`,`Everett`,`Declan`,`Evan`,`Kayden`,`Parker`,`Wesley`,`Kai`,],
+            girl: [ `Olivia`,`Emma`,`Ava`,`Sophia`,`Isabella`,`Charlotte`,`Amelia`,`Mia`,`Harper`,`Evelyn`,`Abigail`,`Emily`,`Ella`,`Elizabeth`,`Camila`,`Luna`,`Sofia`,`Avery`,`Mila`,`Aria`,`Scarlett`,`Penelope`,`Layla`,`Chloe`,`Victoria`,`Madison`,`Eleanor`,`Grace`,`Nora`,`Riley`,`Zoey`,`Hannah`,`Hazel`,`Lily`,`Ellie`,`Violet`,`Lillian`,`Zoe`,`Stella`,`Aurora`,`Natalie`,`Emilia`,`Everly`,`Leah`,`Aubrey`,`Willow`,`Addison`,`Lucy`,`Audrey`,`Bella`,
+                    `Nova`,`Brooklyn`,`Paisley`,`Savannah`,`Claire`,`Skylar`,`Isla`,`Genesis`,`Naomi`,`Elena`,`Caroline`,`Eliana`,`Anna`,`Maya`,`Valentina`,`Ruby`,`Kennedy`,`Ivy`,`Ariana`,`Aaliyah`,`Cora`,`Madelyn`,`Alice`,`Kinsley`,`Hailey`,`Gabriella`,`Allison`,`Gianna`,`Serenity`,`Samantha`,`Sarah`,`Autumn`,`Quinn`,`Eva`,`Piper`,`Sophie`,`Sadie`,`Delilah`,`Josephine`,`Nevaeh`,`Adeline`,`Arya`,`Emery`,`Lydia`,`Clara`,`Vivian`,`Madeline`,`Peyton`,`Julia`,`Rylee`,],
+        },
     };
 
     global.Dye = (string, color) => `<b style="color:${color}">${string}</b>`;
@@ -97,7 +96,7 @@ class System {
         this.kernels[`k0`].add2(Game.spawns[`Spawn1`].id);
     }
     spawn(name) {
-        this.kernels[`k0`].add(Game.spawns[`Spawn1`].id);
+        this.kernels[`k0`].add1(Game.spawns[`Spawn1`].id);
         this.kernels[`k0`].execute(Game.spawns[`Spawn1`].id, `spawnCreep`, [
             [WORK, CARRY, MOVE],
             name,
