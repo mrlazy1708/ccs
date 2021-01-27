@@ -49,7 +49,7 @@ class Control_jack {
             }
         });
         if (this.size < 10) {
-            this.kernel.control_spawn.smh.push([
+            this.kernel.control_spawn.spawn_queue.push([
                 Game.time,
                 [WORK, CARRY, MOVE],
             ]);

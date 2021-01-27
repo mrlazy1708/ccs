@@ -29,6 +29,8 @@ class Kernel {
     init(memory) {
         this.memory = memory[this.name];
 
+        this.death = undefined;
+
         this.object_memory = this.memory.object;
         _.forEach(this.executions, (execution) =>
             execution.init(this.object_memory)
@@ -115,6 +117,7 @@ class Kernel {
         execution.push(type, data);
     }
     remove(id) {
+        this.death = true;
         this.control_jack.remove(id);
         delete this.object_memory[id];
         delete this.executions[id];

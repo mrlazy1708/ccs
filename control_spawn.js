@@ -7,7 +7,7 @@ function random_item(array) {
 
 function random_name() {
     let sex = Math.random() > 0.5 ? `girl` : `boy`;
-    return `${random_item(Faces[sex])}${random_item(
+    return `${random_item(Faces[sex])} ${random_item(
         Names.first[sex]
     )} ${random_item(Names.last)}`;
 }
@@ -27,21 +27,25 @@ class Control_spawn {
         };
         this.kernel = kernel;
 
-        this.smh = new Heap(`smh`, this.memory, (sm1, sm2) => sm1[0] > sm2[0]);
+        this.spawn_queue = new Heap(
+            `spawn_queue`,
+            this.memory,
+            (sm1, sm2) => sm1[0] > sm2[0]
+        );
     }
     init(memory) {
         this.memory = memory.control_spawn;
-        this.smh.init(this.memory);
+        this.spawn_queue.init(this.memory);
     }
     run() {
         _.forEach(this.memory, (id) => {
-            let config = this.smh.top;
+            let config = this.spawn_queue.top;
             if (config) {
                 let spawn = Game.getObjectById(id);
                 if (spawn) {
                     let exec = this.kernel.executions[id];
                     if (!exec || exec.type == `idle`) {
-                        this.smh.pop();
+                        this.spawn_queue.pop();
                         config.shift();
                         config[1] = config[1] || generate_name();
                         this.kernel.execute(spawn.id, `spawnCreep`, config);

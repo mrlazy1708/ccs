@@ -4,6 +4,23 @@ class Execution {
     constructor(id, kernel) {
         this.id = id;
         this.kernel = kernel;
+
+        try {
+            this.name = Game.getObjectById(this.id).name;
+        } catch (err) {
+            return;
+        }
+        this.face = this.name.split(` `);
+        this.name =
+            this.face.length > 2
+                ? this.name.padEnd(
+                      this.name.length -
+                          this.face[1].length -
+                          this.face[2].length +
+                          16
+                  )
+                : `🌈 ${this.name.padEnd(17)}`;
+        this.face = this.face[0];
     }
     init(memory) {
         this.memory = memory[this.id];
@@ -31,10 +48,13 @@ class Execution {
         this.data = this.executing[1] || [];
     }
     run() {
-        this.log = `${this.id}`;
+        this.log = `${this.name}`;
         this.execute(this.type, this.data);
-        this.object.say(this.saying, true);
-        this.log = this.log.substring(0, this.log.length - 16);
+        this.object.say(
+            `${this.face}${this.kernel.death ? `🕯` : this.saying}`,
+            true
+        );
+        this.log = this.log.substring(0, this.log.length - 21);
         console.log(
             this.log +
                 ` -> ${
@@ -46,7 +66,7 @@ class Execution {
         return this.type != `idle`;
     }
     execute(type, data) {
-        this.log += ` -> ${Dye(type, `White`)} ${JSON.stringify(data)}`;
+        this.log += ` -> ${Dye(type, `White`)}${JSON.stringify(data)}`;
         let ret = this[type] ? this[type](...data) : this.default(...data);
         if (ret) {
             this.say(Dictionary[type][1]);
@@ -61,7 +81,7 @@ class Execution {
         // console.log(Game.cpu.getUsed() - cpu_usage_start);
         this.kernel.efficiency += Game.cpu.getUsed() - cpu_usage_start;
         this.log += ` -> ${Dye(Meaning[-ret], `Red`)}
-               `;
+                    `;
         return ret;
     }
     idle() {
