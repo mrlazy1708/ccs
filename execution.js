@@ -4,87 +4,108 @@ class Execution {
     constructor(id, kernel) {
         this.id = id;
         this.kernel = kernel;
-    } // 是否可继续
+    }
     init(memory) {
         this.memory = memory[this.id];
         this.execution_queue = this.memory.execution_queue;
+        this.executing = this.execution_queue[0] || {};
+        this.type = this.executing[0] || `idle`;
+        this.data = this.executing[1] || [];
+        this.saying = undefined;
 
         this.object = Game.getObjectById(this.id);
         if (!this.object) {
             this.kernel.remove(this.id);
         }
     }
+    push(type, data) {
+        this.type = type;
+        this.data = data;
+        this.executing = [type, data];
+        this.execution_queue.push(this.executing);
+    }
+    shift() {
+        this.execution_queue.shift();
+        this.executing = this.execution_queue[0] || {};
+        this.type = this.executing[0] || `idle`;
+        this.data = this.executing[1] || [];
+    }
     run() {
-        this.log = `${this.id}> ${Dye(this.type, `White`)}: ${JSON.stringify(
-            this.data
-        )}`;
-        let ret = this.execute();
-        console.log(this.log);
-        return ret;
+        this.log = `${this.id}`;
+        this.execute(this.type, this.data);
+        this.object.say(this.saying, true);
+        this.log = this.log.substring(0, this.log.length - 16);
+        console.log(
+            this.log +
+                ` -> ${
+                    this.type == `idle`
+                        ? Dye(`Finish`, `Yellow`)
+                        : Dye(`Continue`, `Blue`)
+                }`
+        );
+        return this.type != `idle`;
     }
-    execute() {
-        if (this.try_catch()) {
-            this.log += ` -> ${Dye(`Finish`, `Yellow`)}`;
-            try {
-                this.object.say(Dictionary[this.type][1], true);
-            } catch (err) {}
-            this.memory.execution_queue.shift();
-            return this.type != `idle`;
+    execute(type, data) {
+        this.log += ` -> ${Dye(type, `White`)} ${JSON.stringify(data)}`;
+        let ret = this[type] ? this[type](...data) : this.default(...data);
+        if (ret) {
+            this.say(Dictionary[type][1]);
+            this.shift(); // 继续
         } else {
-            this.log += ` -> ${Dye(`Continue`, `Blue`)}`;
-            try {
-                this.object.say(Dictionary[this.type][0], true);
-            } catch (err) {}
-            return true;
-        }
-    }
-    try_catch() {
-        try {
-            return this[this.type](...this.data);
-        } catch (err) {
-            try {
-                return this.default(...this.data);
-            } catch (err) {
-                this.log += ` -> ${Dye(`ERR`, `Red`)}`;
-                return this.idle();
-            }
+            this.say(Dictionary[type][0]);
         }
     }
     call(type, ...data) {
         let cpu_usage_start = Game.cpu.getUsed(),
             ret = this.object[type](...data);
+        // console.log(Game.cpu.getUsed() - cpu_usage_start);
         this.kernel.efficiency += Game.cpu.getUsed() - cpu_usage_start;
+        this.log += ` -> ${Dye(Meaning[-ret], `Red`)}
+               `;
         return ret;
     }
     idle() {
         return true;
     }
     default(id, ...data) {
-        let target = Game.getObjectById(id),
-            ret;
-        if (target) {
-            ret = this.call(this.type, target, ...data);
-        } else {
-            ret = this.call(this.type, id, ...data);
-        }
-        this.log += ` -> ${Dye(Meaning[-ret], `Red`)}`;
-        if (ret == OK) {
-            return this.check(target);
-        } else {
+        try {
+            let target = Game.getObjectById(id),
+                ret = target
+                    ? this.call(this.type, target, ...data)
+                    : this.call(this.type, id, ...data);
             return ret != ERR_BUSY && ret != ERR_TIRED;
-        }
+        } catch (err) {}
     }
-    check(target) {
-        switch (this.type) {
-            case `moveTo`:
-                return this.object.pos.getRangeTo(target) < 2;
-            case `harvest`:
-                return this.object.store.getFreeCapacity() == 0;
-            case `upgradeController`:
-                return this.object.store[RESOURCE_ENERGY] == 0;
-            default:
-                return true;
+    say(message) {
+        this.saying = this.saying || message;
+    }
+    moveTo(id, opts) {
+        let target = Game.getObjectById(id);
+        this.call(`moveTo`, target, opts);
+        return this.object.pos.getRangeTo(target.pos) == 0;
+    }
+    harvest(id) {
+        let target = Game.getObjectById(id);
+        if (this.call(`harvest`, target) == ERR_NOT_IN_RANGE) {
+            this.execute(`moveTo`, [id]);
         }
+        return this.object.store.getFreeCapacity(RESOURCE_ENERGY) == 0;
+    }
+    transfer(id, resourceType, amount) {
+        let target = Game.getObjectById(id),
+            ret = this.call(`transfer`, target, resourceType, amount);
+        if (ret == ERR_NOT_IN_RANGE) {
+            this.execute(`moveTo`, [id]);
+        }
+        return ret == OK;
+    }
+    upgradeController(id) {
+        let target = Game.getObjectById(id),
+            ret = this.call(`upgradeController`, target);
+        if (ret == ERR_NOT_IN_RANGE) {
+            this.execute(`moveTo`, [id]);
+        }
+        return ret == ERR_NOT_ENOUGH_RESOURCES;
     }
     spawnCreep(body, name, opts) {
         if (this.memory.start) {
@@ -92,22 +113,11 @@ class Execution {
             this.kernel.add1(Game.creeps[name].id);
             return true;
         } else {
-            let ret = this.call(`spawnCreep`, body, name, opts);
-            this.log += ` -> ${Dye(Meaning[-ret], `Red`)}`;
-            if (ret == OK) {
+            if (this.call(`spawnCreep`, body, name, opts) == OK) {
                 this.memory.start = true;
             }
             return false;
         }
-    }
-    get executing() {
-        return this.execution_queue[0] || {};
-    }
-    get type() {
-        return this.executing.type || `idle`;
-    }
-    get data() {
-        return this.executing.data;
     }
 }
 

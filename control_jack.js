@@ -20,9 +20,6 @@ class Control_jack {
                     if (creep.store.getFreeCapacity() > 0) {
                         let target = creep.pos.findClosestByPath(FIND_SOURCES);
                         if (target) {
-                            this.kernel.execute(creep.id, `moveTo`, [
-                                target.id,
-                            ]);
                             this.kernel.execute(creep.id, `harvest`, [
                                 target.id,
                             ]);
@@ -35,18 +32,12 @@ class Control_jack {
                             target &&
                             target.store.getFreeCapacity(RESOURCE_ENERGY) > 20
                         ) {
-                            this.kernel.execute(creep.id, `moveTo`, [
-                                target.id,
-                            ]);
                             this.kernel.execute(creep.id, `transfer`, [
                                 target.id,
                                 RESOURCE_ENERGY,
                             ]);
                         } else {
                             target = Game.rooms[`E47S29`].controller;
-                            this.kernel.execute(creep.id, `moveTo`, [
-                                target.id,
-                            ]);
                             this.kernel.execute(creep.id, `upgradeController`, [
                                 target.id,
                             ]);

@@ -60,7 +60,9 @@ class Kernel {
             let execution = this.executions[element.id];
             if (execution instanceof Execution) {
                 this.execution_count++;
+                // let a = Game.cpu.getUsed();
                 if (execution.run()) {
+                    // console.log(Game.cpu.getUsed() - a);
                     this.execution_heap.push({
                         last_run: Game.time,
                         id: element.id,
@@ -110,7 +112,7 @@ class Kernel {
         if (execution.type == `idle`) {
             this.execution_heap.push({ last_run: Game.time, id: id });
         }
-        this.object_memory[id].execution_queue.push({ type: type, data: data });
+        execution.push(type, data);
     }
     remove(id) {
         this.control_jack.remove(id);

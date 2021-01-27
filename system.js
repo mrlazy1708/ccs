@@ -13,10 +13,13 @@ function define_constant() {
     // prettier-ignore
     global.Meaning = [`OK`,`ERR_NOT_OWNER`,`ERR_NO_PATH`,`ERR_NAME_EXISTS`,`ERR_BUSY`,`ERR_NOT_FOUND`,`ERR_NOT_ENOUGH_RESOURCES`,`ERR_INVALID_TARGET`,`ERR_FULL`,`ERR_NOT_IN_RANGE`,`ERR_INVALID_ARGS`,`ERR_TIRED`,`ERR_NO_BODYPART`,`ERR_NOT_ENOUGH_EXTENSIONS`,`ERR_RCL_NOT_ENOUGH`,`ERR_GCL_NOT_ENOUGH`,];
     global.Dictionary = {
+        idle: [`🥱`, `🥱`],
         moveTo: [`🚗`, `🎯`],
         harvest: [`⛏`, `🈵`],
         transfer: [`🛢`, `🈳`],
         upgradeController: [`🔋`, `🈳`],
+
+        spawnCreep: [],
     };
     // prettier-ignore
     global.Faces = {
@@ -37,6 +40,10 @@ function define_constant() {
     global.Dye = (string, color) => `<b style="color:${color}">${string}</b>`;
 }
 
+function set_prototype() {
+    Spawn.prototype.say = () => {};
+}
+
 class System {
     constructor(name) {
         this.name = name;
@@ -44,6 +51,7 @@ class System {
 
         import_module();
         define_constant();
+        set_prototype();
 
         this.kernels = _.mapValues(
             (this.memory.kernels = this.memory.kernels || {}),
