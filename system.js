@@ -105,6 +105,7 @@ class System {
         this.kernels[`k0`].add2(Game.spawns[`Spawn1`].id);
     }
     new_kernel(core) {
+        delete this.memory.kernels[`k_${core.name}`];
         let kernel = (this.kernels[`k_${core.name}`] = new Kernel(
             `k_${core.name}`,
             this.memory.kernels
@@ -112,6 +113,7 @@ class System {
         kernel.init(this.memory.kernels);
         kernel.add_room(core);
         kernel.set_core(core);
+        kernel.control_jack.memory.queued = 0;
     }
     spawn(name) {
         this.kernels[`k0`].add1(Game.spawns[`Spawn1`].id);

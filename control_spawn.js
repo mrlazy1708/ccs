@@ -35,22 +35,18 @@ class Control_spawn {
     }
     init(memory) {
         this.memory = memory.control_spawn;
+
+        this.spawns = _.map(this.memory.spawns, (id) => Game.getObjectById(id));
         this.spawn_queue.init(this.memory);
     }
     run() {
-        _.forEach(this.memory, (id) => {
+        _.forEach(this.spawns, (spawn) => {
             let config = this.spawn_queue.top;
-            if (config) {
-                let spawn = Game.getObjectById(id);
-                if (spawn) {
-                    let entity = this.kernel.entities[id];
-                    if (!entity || entity.type == `idle`) {
-                        this.spawn_queue.pop();
-                        config.shift();
-                        config[1] = config[1] || generate_name();
-                        this.kernel.execute(spawn.id, `spawnCreep`, config);
-                    }
-                }
+            if (config && spawn.entity.type == `idle`) {
+                this.spawn_queue.pop();
+                config.shift();
+                config[1] = config[1] || generate_name();
+                spawn.entity.queue(`spawnCreep`, config);
             }
         });
     }

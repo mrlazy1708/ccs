@@ -14,38 +14,39 @@ class Control_jack {
     run() {
         _.forEach(this.memory.jacks, (id) => {
             let creep = Game.getObjectById(id);
-            if (creep instanceof Creep) {
-                let entity = this.kernel.entities[id];
-                if (!entity || entity.type == `idle`) {
-                    if (creep.store.getFreeCapacity() > 0) {
-                        let target = creep.pos.findClosestByPath(FIND_SOURCES);
-                        if (target) {
-                            this.kernel.execute(creep.id, `harvest`, [
-                                target.id,
-                            ]);
+            if (creep) {
+                if (creep.entity.type == `idle`) {
+                    if (creep.store[RESOURCE_ENERGY] == 0) {
+                        let source = creep.pos.findClosestByPath(
+                            this.kernel.control_room.sources
+                        );
+                        if (source instanceof Source) {
+                            creep.entity.queue(`harvest`, [source.id]);
                         }
                     } else {
-                        let target = creep.pos.findClosestByPath(
-                            FIND_MY_SPAWNS
+                        let spawn = creep.pos.findClosestByPath(
+                            _.filter(
+                                this.kernel.control_spawn.spawns,
+                                (spawn) =>
+                                    spawn.store.getFreeCapacity(
+                                        RESOURCE_ENERGY
+                                    ) > 20
+                            )
                         );
-                        if (
-                            target &&
-                            target.store.getFreeCapacity(RESOURCE_ENERGY) > 20
-                        ) {
-                            this.kernel.execute(creep.id, `transfer`, [
-                                target.id,
+                        if (spawn) {
+                            creep.entity.queue(`transfer`, [
+                                spawn.id,
                                 RESOURCE_ENERGY,
                             ]);
                         } else {
-                            target = Game.rooms[`W7N7`].controller;
-                            this.kernel.execute(creep.id, `upgradeController`, [
-                                target.id,
+                            creep.entity.queue(`upgradeController`, [
+                                this.kernel.control_room.core.controller.id,
                             ]);
                         }
                     }
                 }
             } else {
-                this.remove(id);
+                this.remove_jack(id);
             }
         });
         if (this.size < 10) {
@@ -57,10 +58,11 @@ class Control_jack {
         }
     }
     add_jack(jack) {
-        this.memory.jacks.push(jack.id); //queued
+        this.memory.jacks.push(jack.id);
+        this.memory.queued--;
     }
-    remove(id) {
-        _.remove(this.memory.jacks, (value) => value == id);
+    remove_jack(jack_id) {
+        _.remove(this.memory.jacks, (id) => id == jack_id);
     }
     get size() {
         return this.memory.jacks.length + this.memory.queued;

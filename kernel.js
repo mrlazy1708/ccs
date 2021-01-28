@@ -46,7 +46,7 @@ class Kernel {
         this.cpu_usage = Game.cpu.getUsed();
         this.execution_count = 0;
         this.efficiency = 0;
-
+        
         this.control_jack.run();
         this.control_spawn.run();
 
@@ -96,13 +96,6 @@ class Kernel {
         this.memory.objects[object.id] = { execution_queue: [] };
         let entity = (this.entities[object.id] = new Entity(object.id, this));
         entity.init(this.memory.objects);
-    }
-    execute(id, type, data) {
-        let entity = this.entities[id];
-        if (entity.type == `idle`) {
-            this.execution_queue.push({ last_run: Game.time, id: id });
-        }
-        entity.push(type, data);
     }
     remove_entity(id) {
         delete this.memory.objects[id];

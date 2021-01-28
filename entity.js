@@ -32,7 +32,9 @@ class Entity {
         this.saying = undefined;
 
         this.object = Game.getObjectById(this.id);
-        if (!this.object) {
+        if (this.object) {
+            this.object.entity = this;
+        } else {
             this.kernel.remove_entity(this.id);
         }
     }
@@ -47,6 +49,15 @@ class Entity {
         this.executing = this.execution_queue[0] || {};
         this.type = this.executing[0] || `idle`;
         this.data = this.executing[1] || [];
+    }
+    queue(type, data) {
+        if (this.type == `idle`) {
+            this.kernel.execution_queue.push({
+                last_run: Game.time,
+                id: this.id,
+            });
+        }
+        this.push(type, data);
     }
     run() {
         this.log = `${this.name}`;
@@ -118,7 +129,7 @@ class Entity {
         if (ret == ERR_NOT_IN_RANGE) {
             this.execute(`moveTo`, [id]);
         }
-        return ret == OK;
+        return ret == OK || ret == ERR_FULL;
     }
     upgradeController(id) {
         let target = Game.getObjectById(id),
