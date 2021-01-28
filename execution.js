@@ -32,7 +32,7 @@ class Execution {
 
         this.object = Game.getObjectById(this.id);
         if (!this.object) {
-            this.kernel.remove(this.id);
+            this.kernel.remove_execution(this.id);
         }
     }
     push(type, data) {
@@ -130,7 +130,7 @@ class Execution {
     spawnCreep(body, name, opts) {
         if (this.memory.start) {
             this.memory.start = false;
-            this.kernel.add1(Game.creeps[name].id);
+            this.kernel.add_creep(Game.creeps[name]);
             return true;
         } else {
             if (this.call(`spawnCreep`, body, name, opts) == OK) {

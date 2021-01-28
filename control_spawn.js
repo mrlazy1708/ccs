@@ -54,8 +54,8 @@ class Control_spawn {
             }
         });
     }
-    add(id) {
-        this.memory.spawns.push(id);
+    add_spawn(spawn) {
+        this.memory.spawns.push(spawn.id);
     }
 }
 

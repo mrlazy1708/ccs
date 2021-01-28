@@ -5,6 +5,7 @@ function import_module() {
     global.Kernel = require(`kernel`);
     global.Heap = require(`heap`);
     global.Execution = require(`execution`);
+    global.Control_room = require(`control_room`);
     global.Control_jack = require(`control_jack`);
     global.Control_spawn = require(`control_spawn`);
 }
@@ -102,6 +103,15 @@ class System {
         _.forEach(Game.creeps, (creep) => this.kernels[`k0`].add1(creep.id));
         this.kernels[`k0`].control_jack.memory.queued = 0;
         this.kernels[`k0`].add2(Game.spawns[`Spawn1`].id);
+    }
+    new_kernel(core) {
+        let kernel = (this.kernels[`k_${core.name}`] = new Kernel(
+            `k_${core.name}`,
+            this.memory.kernels
+        ));
+        kernel.init(this.memory.kernels);
+        kernel.add_room(core);
+        kernel.set_core(core);
     }
     spawn(name) {
         this.kernels[`k0`].add1(Game.spawns[`Spawn1`].id);

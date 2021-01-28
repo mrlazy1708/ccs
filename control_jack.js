@@ -37,7 +37,7 @@ class Control_jack {
                                 RESOURCE_ENERGY,
                             ]);
                         } else {
-                            target = Game.rooms[`E47S29`].controller;
+                            target = Game.rooms[`W7N7`].controller;
                             this.kernel.execute(creep.id, `upgradeController`, [
                                 target.id,
                             ]);
@@ -56,9 +56,8 @@ class Control_jack {
             this.memory.queued++;
         }
     }
-    add(id) {
-        this.memory.jacks.push(id);
-        this.memory.queued--; //spawn非正常死亡
+    add_jack(jack) {
+        this.memory.jacks.push(jack.id); //queued
     }
     remove(id) {
         _.remove(this.memory.jacks, (value) => value == id);

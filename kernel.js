@@ -1,5 +1,3 @@
-const Blackbox = require("./blackbox");
-
 `use strict`;
 
 class Kernel {
@@ -7,9 +5,9 @@ class Kernel {
         this.name = name;
         this.memory = memory[this.name] = memory[this.name] || {};
 
-        this.object_memory = this.memory.object = this.memory.object || {};
+        this.memory.objects = this.memory.objects = this.memory.objects || {};
         this.executions = _.mapValues(
-            this.object_memory,
+            this.memory.objects,
             (_, key) => new Execution(key, this)
         );
 
@@ -19,6 +17,7 @@ class Kernel {
             (element_1, element_2) => element_1.last_run < element_2.last_run
         );
 
+        this.control_room = new Control_room(this.memory, this);
         this.control_jack = new Control_jack(this.memory, this);
         this.control_spawn = new Control_spawn(this.memory, this);
 
@@ -31,13 +30,13 @@ class Kernel {
 
         this.death = undefined;
 
-        this.object_memory = this.memory.object;
         _.forEach(this.executions, (execution) =>
-            execution.init(this.object_memory)
+            execution.init(this.memory.objects)
         );
 
         this.execution_heap.init(this.memory);
 
+        this.control_room.init(this.memory);
         this.control_jack.init(this.memory);
         this.control_spawn.init(this.memory);
 
@@ -69,8 +68,6 @@ class Kernel {
                         last_run: Game.time,
                         id: element.id,
                     });
-                } else {
-                    console.log(`finish~`);
                 }
             }
         }
@@ -95,19 +92,13 @@ class Kernel {
         report += `      Efficiency: ${this.efficiency}\n\n`;
         return report;
     }
-    add1(id) {
-        this.object_memory[id] = { execution_queue: [] };
-        this.executions[id] = new Execution(id, this);
-        this.executions[id].init(this.object_memory);
-
-        this.control_jack.add(id);
-    }
-    add2(id) {
-        this.object_memory[id] = { execution_queue: [] };
-        this.executions[id] = new Execution(id, this);
-        this.executions[id].init(this.object_memory);
-
-        this.control_spawn.add(id);
+    new_execution(object) {
+        this.memory.objects[object.id] = { execution_queue: [] };
+        let execution = (this.executions[object.id] = new Execution(
+            object.id,
+            this
+        ));
+        execution.init(this.memory.objects);
     }
     execute(id, type, data) {
         let execution = this.executions[id];
@@ -116,11 +107,35 @@ class Kernel {
         }
         execution.push(type, data);
     }
-    remove(id) {
-        this.death = true;
-        this.control_jack.remove(id);
-        delete this.object_memory[id];
+    remove_execution(id) {
+        delete this.memory.objects[id];
         delete this.executions[id];
+    }
+    add_creep(creep) {
+        if (!this.executions[creep.id]) {
+            this.new_execution(creep);
+        }
+
+        this.control_jack.add_jack(creep);
+    }
+    add_structure(structure) {
+        if (!this.executions[structure.id]) {
+            this.new_execution(structure);
+        }
+
+        this.control_spawn.add_spawn(structure);
+    }
+    add_room(room) {
+        this.control_room.add_room(room);
+
+        let creeps = room.find(FIND_MY_CREEPS);
+        _.forEach(creeps, (creep) => this.add_creep(creep));
+
+        let spawns = room.find(FIND_MY_SPAWNS);
+        _.forEach(spawns, (spawn) => this.add_structure(spawn));
+    }
+    set_core(core) {
+        this.control_room.set_core(core);
     }
 }
 
