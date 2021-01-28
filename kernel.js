@@ -21,14 +21,14 @@ class Kernel {
         this.control_jack = new Control_jack(this.memory, this);
         this.control_spawn = new Control_spawn(this.memory, this);
 
+        this.loss = [];
+
         this.record_cpu_usage = new Blackbox(`record_cpu_usage`, this.memory);
         this.record_execution = new Blackbox(`record_execution`, this.memory);
         this.record_efficiency = new Blackbox(`record_efficiency`, this.memory);
     }
     init(memory) {
         this.memory = memory[this.name];
-
-        this.death = undefined;
 
         _.forEach(this.entities, (entity) => entity.init(this.memory.objects));
 
@@ -46,7 +46,7 @@ class Kernel {
         this.cpu_usage = Game.cpu.getUsed();
         this.execution_count = 0;
         this.efficiency = 0;
-        
+
         this.control_jack.run();
         this.control_spawn.run();
 
@@ -81,6 +81,14 @@ class Kernel {
         );
     }
     shut() {
+        for (
+            let aftermath = this.loss.pop();
+            aftermath;
+            aftermath = this.loss.pop()
+        ) {
+            aftermath();
+        }
+
         this.record_cpu_usage.tick();
         this.record_execution.tick();
         this.record_efficiency.tick();

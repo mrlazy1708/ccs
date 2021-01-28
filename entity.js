@@ -63,7 +63,7 @@ class Entity {
         this.log = `${this.name}`;
         this.execute(this.type, this.data);
         this.object.say(
-            `${this.face}${this.kernel.death ? `🕯` : this.saying}`,
+            `${this.face}${this.kernel.loss.length > 0 ? `🕯` : this.saying}`,
             true
         );
         this.log = this.log.substring(0, this.log.length - 21);

@@ -12,8 +12,8 @@ class Control_jack {
         this.memory = memory.control_jack;
     }
     run() {
-        _.forEach(this.memory.jacks, (id) => {
-            let creep = Game.getObjectById(id);
+        _.forEach(this.memory.jacks, (name) => {
+            let creep = Game.creeps[name];
             if (creep) {
                 if (creep.entity.type == `idle`) {
                     if (creep.store[RESOURCE_ENERGY] == 0) {
@@ -46,7 +46,7 @@ class Control_jack {
                     }
                 }
             } else {
-                this.remove_jack(id);
+                this.remove_jack(name);
             }
         });
         if (this.size < 10) {
@@ -58,11 +58,12 @@ class Control_jack {
         }
     }
     add_jack(jack) {
-        this.memory.jacks.push(jack.id);
+        this.memory.jacks.push(jack.name);
         this.memory.queued--;
     }
-    remove_jack(jack_id) {
-        _.remove(this.memory.jacks, (id) => id == jack_id);
+    remove_jack(jack_name) {
+        _.remove(this.memory.jacks, (name) => name == jack_name);
+        this.kernel.loss.push(() => delete Memory.creeps[jack_name]);
     }
     get size() {
         return this.memory.jacks.length + this.memory.queued;
