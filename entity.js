@@ -24,8 +24,9 @@ class Entity {
     }
     init(memory) {
         this.memory = memory[this.id];
-        this.entity_queue = this.memory.entity_queue;
-        this.executing = this.entity_queue[0] || {};
+
+        this.execution_queue = this.memory.execution_queue;
+        this.executing = this.execution_queue[0] || {};
         this.type = this.executing[0] || `idle`;
         this.data = this.executing[1] || [];
         this.saying = undefined;
@@ -39,11 +40,11 @@ class Entity {
         this.type = type;
         this.data = data;
         this.executing = [type, data];
-        this.entity_queue.push(this.executing);
+        this.execution_queue.push(this.executing);
     }
     shift() {
-        this.entity_queue.shift();
-        this.executing = this.entity_queue[0] || {};
+        this.execution_queue.shift();
+        this.executing = this.execution_queue[0] || {};
         this.type = this.executing[0] || `idle`;
         this.data = this.executing[1] || [];
     }

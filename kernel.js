@@ -93,7 +93,7 @@ class Kernel {
         return report;
     }
     new_entity(object) {
-        this.memory.objects[object.id] = { entity_queue: [] };
+        this.memory.objects[object.id] = { execution_queue: [] };
         let entity = (this.entities[object.id] = new Entity(object.id, this));
         entity.init(this.memory.objects);
     }

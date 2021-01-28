@@ -43,8 +43,8 @@ class Control_spawn {
             if (config) {
                 let spawn = Game.getObjectById(id);
                 if (spawn) {
-                    let exec = this.kernel.entities[id];
-                    if (!exec || exec.type == `idle`) {
+                    let entity = this.kernel.entities[id];
+                    if (!entity || entity.type == `idle`) {
                         this.spawn_queue.pop();
                         config.shift();
                         config[1] = config[1] || generate_name();
