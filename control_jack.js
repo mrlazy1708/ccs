@@ -20,7 +20,7 @@ class Control_jack {
                         let source = creep.pos.findClosestByPath(
                             this.kernel.control_room.sources
                         );
-                        if (source instanceof Source) {
+                        if (source) {
                             creep.entity.queue(`harvest`, [source.id]);
                         }
                     } else {

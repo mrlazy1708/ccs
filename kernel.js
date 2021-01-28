@@ -59,7 +59,7 @@ class Kernel {
         ) {
             this.execution_queue.pop();
             let entity = this.entities[execution.id];
-            if (entity instanceof Entity) {
+            if (entity) {
                 this.execution_count++;
                 // let a = Game.cpu.getUsed();
                 if (entity.run()) {
