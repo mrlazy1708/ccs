@@ -15,7 +15,7 @@ class Control_jack {
         _.forEach(this.memory.jacks, (id) => {
             let creep = Game.getObjectById(id);
             if (creep instanceof Creep) {
-                let exec = this.kernel.executions[id];
+                let exec = this.kernel.entities[id];
                 if (!exec || exec.type == `idle`) {
                     if (creep.store.getFreeCapacity() > 0) {
                         let target = creep.pos.findClosestByPath(FIND_SOURCES);

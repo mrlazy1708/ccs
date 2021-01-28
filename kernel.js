@@ -6,13 +6,13 @@ class Kernel {
         this.memory = memory[this.name] = memory[this.name] || {};
 
         this.memory.objects = this.memory.objects = this.memory.objects || {};
-        this.executions = _.mapValues(
+        this.entities = _.mapValues(
             this.memory.objects,
-            (_, key) => new Execution(key, this)
+            (_, key) => new Entity(key, this)
         );
 
-        this.execution_heap = new Heap(
-            `execution_heap`,
+        this.execution_queue = new Heap(
+            `execution_queue`,
             this.memory,
             (element_1, element_2) => element_1.last_run < element_2.last_run
         );
@@ -30,11 +30,9 @@ class Kernel {
 
         this.death = undefined;
 
-        _.forEach(this.executions, (execution) =>
-            execution.init(this.memory.objects)
-        );
+        _.forEach(this.entities, (entity) => entity.init(this.memory.objects));
 
-        this.execution_heap.init(this.memory);
+        this.execution_queue.init(this.memory);
 
         this.control_room.init(this.memory);
         this.control_jack.init(this.memory);
@@ -53,20 +51,22 @@ class Kernel {
         this.control_spawn.run();
 
         for (
-            let element = this.execution_heap.top;
-            element && element.last_run < Game.time && Game.cpu.getUsed() < 5;
-            element = this.execution_heap.top
+            let execution = this.execution_queue.top;
+            execution &&
+            execution.last_run < Game.time &&
+            Game.cpu.getUsed() < 5;
+            execution = this.execution_queue.top
         ) {
-            this.execution_heap.pop();
-            let execution = this.executions[element.id];
-            if (execution instanceof Execution) {
+            this.execution_queue.pop();
+            let entity = this.entities[execution.id];
+            if (entity instanceof Entity) {
                 this.execution_count++;
                 // let a = Game.cpu.getUsed();
-                if (execution.run()) {
+                if (entity.run()) {
                     // console.log(Game.cpu.getUsed() - a);
-                    this.execution_heap.push({
+                    this.execution_queue.push({
                         last_run: Game.time,
-                        id: element.id,
+                        id: execution.id,
                     });
                 }
             }
@@ -92,35 +92,32 @@ class Kernel {
         report += `      Efficiency: ${this.efficiency}\n\n`;
         return report;
     }
-    new_execution(object) {
-        this.memory.objects[object.id] = { execution_queue: [] };
-        let execution = (this.executions[object.id] = new Execution(
-            object.id,
-            this
-        ));
-        execution.init(this.memory.objects);
+    new_entity(object) {
+        this.memory.objects[object.id] = { entity_queue: [] };
+        let entity = (this.entities[object.id] = new Entity(object.id, this));
+        entity.init(this.memory.objects);
     }
     execute(id, type, data) {
-        let execution = this.executions[id];
-        if (execution.type == `idle`) {
-            this.execution_heap.push({ last_run: Game.time, id: id });
+        let entity = this.entities[id];
+        if (entity.type == `idle`) {
+            this.execution_queue.push({ last_run: Game.time, id: id });
         }
-        execution.push(type, data);
+        entity.push(type, data);
     }
-    remove_execution(id) {
+    remove_entity(id) {
         delete this.memory.objects[id];
-        delete this.executions[id];
+        delete this.entities[id];
     }
     add_creep(creep) {
-        if (!this.executions[creep.id]) {
-            this.new_execution(creep);
+        if (!this.entities[creep.id]) {
+            this.new_entity(creep);
         }
 
         this.control_jack.add_jack(creep);
     }
     add_structure(structure) {
-        if (!this.executions[structure.id]) {
-            this.new_execution(structure);
+        if (!this.entities[structure.id]) {
+            this.new_entity(structure);
         }
 
         this.control_spawn.add_spawn(structure);

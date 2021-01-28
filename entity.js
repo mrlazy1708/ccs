@@ -1,6 +1,6 @@
 `use strict`;
 
-class Execution {
+class Entity {
     constructor(id, kernel) {
         this.id = id;
         this.kernel = kernel;
@@ -24,26 +24,26 @@ class Execution {
     }
     init(memory) {
         this.memory = memory[this.id];
-        this.execution_queue = this.memory.execution_queue;
-        this.executing = this.execution_queue[0] || {};
+        this.entity_queue = this.memory.entity_queue;
+        this.executing = this.entity_queue[0] || {};
         this.type = this.executing[0] || `idle`;
         this.data = this.executing[1] || [];
         this.saying = undefined;
 
         this.object = Game.getObjectById(this.id);
         if (!this.object) {
-            this.kernel.remove_execution(this.id);
+            this.kernel.remove_entity(this.id);
         }
     }
     push(type, data) {
         this.type = type;
         this.data = data;
         this.executing = [type, data];
-        this.execution_queue.push(this.executing);
+        this.entity_queue.push(this.executing);
     }
     shift() {
-        this.execution_queue.shift();
-        this.executing = this.execution_queue[0] || {};
+        this.entity_queue.shift();
+        this.executing = this.entity_queue[0] || {};
         this.type = this.executing[0] || `idle`;
         this.data = this.executing[1] || [];
     }
@@ -141,4 +141,4 @@ class Execution {
     }
 }
 
-module.exports = Execution;
+module.exports = Entity;

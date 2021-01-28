@@ -43,7 +43,7 @@ class Control_spawn {
             if (config) {
                 let spawn = Game.getObjectById(id);
                 if (spawn) {
-                    let exec = this.kernel.executions[id];
+                    let exec = this.kernel.entities[id];
                     if (!exec || exec.type == `idle`) {
                         this.spawn_queue.pop();
                         config.shift();

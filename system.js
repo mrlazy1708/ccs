@@ -4,7 +4,7 @@ function import_module() {
     global.Blackbox = require(`blackbox`);
     global.Kernel = require(`kernel`);
     global.Heap = require(`heap`);
-    global.Execution = require(`execution`);
+    global.Entity = require(`entity`);
     global.Control_room = require(`control_room`);
     global.Control_jack = require(`control_jack`);
     global.Control_spawn = require(`control_spawn`);
