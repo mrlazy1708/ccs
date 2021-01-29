@@ -9,13 +9,12 @@ class Control_room {
         };
         this.kernel = kernel;
     }
-    init(memory) {
-        this.memory = memory.control_room;
+    init() {
         this.core = Game.rooms[this.memory.core];
         this.rooms = _.map(this.memory.rooms, (name) => Game.rooms[name]);
         this.sources = _.map(this.memory.sources, (id) =>
             Game.getObjectById(id)
-        );
+        ); //loss?
     }
     add_room(room) {
         this.memory.rooms.push(room.name);

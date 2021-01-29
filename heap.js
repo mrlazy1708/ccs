@@ -6,9 +6,6 @@ class Heap {
         this.memory = memory[this.name] = memory[this.name] || [null];
         this.predictor = predictor;
     }
-    init(memory) {
-        this.memory = memory[this.name];
-    }
     push(element) {
         this.memory.push(element);
         for (

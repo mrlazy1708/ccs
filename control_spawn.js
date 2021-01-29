@@ -33,11 +33,20 @@ class Control_spawn {
             (sm1, sm2) => sm1[0] > sm2[0]
         );
     }
-    init(memory) {
-        this.memory = memory.control_spawn;
-
-        this.spawns = _.map(this.memory.spawns, (id) => Game.getObjectById(id));
-        this.spawn_queue.init(this.memory);
+    init() {
+        this.spawns = _.reduce(
+            this.memory.spawns,
+            (rst, name) => {
+                let spawn = Game.spawns[name];
+                if (spawn) {
+                    rst.push(spawn);
+                } else {
+                    this.remove_spawn(name);
+                }
+                return rst;
+            },
+            []
+        );
     }
     run() {
         _.forEach(this.spawns, (spawn) => {
@@ -51,7 +60,11 @@ class Control_spawn {
         });
     }
     add_spawn(spawn) {
-        this.memory.spawns.push(spawn.id);
+        this.memory.spawns.push(spawn.name);
+    }
+    remove_spawn(spawn_name) {
+        _.remove(this.memory.spawns, (name) => name == spawn_name);
+        this.kernel.loss.push(() => delete Memory.spawns[spawn_name]);
     }
 }
 

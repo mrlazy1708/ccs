@@ -67,26 +67,23 @@ class System {
 
         Game.system = this;
 
-        this.memory = Memory[this.name];
-
-        _.forEach(this.kernels, (kernel) => kernel.init(this.memory.kernels));
-
-        this.record_cpu_usage.init(this.memory);
-        this.record_population.init(this.memory);
+        _.forEach(this.kernels, (kernel) => kernel.init());
     }
     run() {
+        this.record_cpu_usage.tick();
+        this.record_population.tick();
+
         _.forEach(this.kernels, (kernel) => kernel.run());
+    }
+    shut() {
+        Memory[this.name] = this.memory;
+
+        _.forEach(this.kernels, (kernel) => kernel.shut());
 
         this.record_cpu_usage.record(
             (this.cpu_usage = Game.cpu.getUsed() - this.cpu_usage)
         );
         this.record_population.record(_.keys(Game.creeps).length);
-    }
-    shut() {
-        _.forEach(this.kernels, (kernel) => kernel.shut());
-
-        this.record_cpu_usage.tick();
-        this.record_population.tick();
     }
     get report() {
         let report = `Game report at tick ${Game.time}:\n`;

@@ -8,9 +8,7 @@ class Control_jack {
         };
         this.kernel = kernel;
     }
-    init(memory) {
-        this.memory = memory.control_jack;
-
+    init() {
         this.jacks = _.reduce(
             this.memory.jacks,
             (rst, name) => {
@@ -36,7 +34,7 @@ class Control_jack {
                     );
                     if (source) {
                         jack.entity.queue(`harvest`, [source.id, 1]);
-                        source.memory.potential--;
+                        source.entity.memory.potential--;
                     }
                 } else {
                     let spawn = jack.pos.findClosestByPath(

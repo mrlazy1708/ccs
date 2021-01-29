@@ -1,36 +1,33 @@
 `use strict`;
 
 class Entity {
-    constructor(id, kernel) {
+    constructor(id, memory, kernel) {
         this.id = id;
+        this.memory = memory[this.id] = memory[this.id] || {};
         this.kernel = kernel;
 
-        try {
-            this.name = Game.getObjectById(this.id).name;
-            this.face = this.name.split(` `);
-        } catch (err) {
-            return;
-        }
-        this.name =
-            this.face.length > 2
-                ? this.name.padEnd(
-                      this.name.length -
-                          this.face[1].length -
-                          this.face[2].length +
-                          16
-                  )
-                : `🌈 ${this.name.padEnd(17)}`;
-        this.face = this.face[0];
-    }
-    init(memory) {
-        this.memory = memory[this.id];
-
-        this.execution_queue = this.memory.execution_queue;
+        this.execution_queue = this.memory.execution_queue =
+            this.memory.execution_queue || [];
         this.executing = this.execution_queue[0] || {};
         this.type = this.executing[0] || `idle`;
         this.data = this.executing[1] || [];
-        this.saying = undefined;
 
+        this.name = Game.getObjectById(this.id).name || this.id;
+        this.face = this.name.split(` `);
+        if (this.face.length > 2) {
+            this.name = this.name.padEnd(
+                this.name.length -
+                    this.face[1].length -
+                    this.face[2].length +
+                    16
+            );
+            this.face = this.face[0];
+        } else {
+            this.name = `🌈 ${this.name.padEnd(17)}`;
+            this.face = `🌈`;
+        }
+    }
+    init() {
         this.object = Game.getObjectById(this.id);
         if (this.object) {
             this.object.entity = this;
@@ -65,6 +62,7 @@ class Entity {
     }
     run() {
         this.log = `${this.name}`;
+        this.saying = undefined;
         this.execute(this.type, this.data);
         this.object.say(
             `${this.face}${this.kernel.loss.length > 0 ? `🕯` : this.saying}`,

@@ -5,10 +5,11 @@ class Kernel {
         this.name = name;
         this.memory = memory[this.name] = memory[this.name] || {};
 
-        this.memory.objects = this.memory.objects = this.memory.objects || {};
+        this.memory.entities = this.memory.entities =
+            this.memory.entities || {};
         this.entities = _.mapValues(
-            this.memory.objects,
-            (_, key) => new Entity(key, this)
+            this.memory.entities,
+            (_, id, memory) => new Entity(id, memory, this)
         );
 
         this.execution_queue = new Heap(
@@ -27,22 +28,18 @@ class Kernel {
         this.record_execution = new Blackbox(`record_execution`, this.memory);
         this.record_efficiency = new Blackbox(`record_efficiency`, this.memory);
     }
-    init(memory) {
-        this.memory = memory[this.name];
+    init() {
+        _.forEach(this.entities, (entity) => entity.init());
 
-        _.forEach(this.entities, (entity) => entity.init(this.memory.objects));
-
-        this.execution_queue.init(this.memory);
-
-        this.control_room.init(this.memory);
-        this.control_jack.init(this.memory);
-        this.control_spawn.init(this.memory);
-
-        this.record_cpu_usage.init(this.memory);
-        this.record_execution.init(this.memory);
-        this.record_efficiency.init(this.memory);
+        this.control_room.init();
+        this.control_jack.init();
+        this.control_spawn.init();
     }
     run() {
+        this.record_cpu_usage.tick();
+        this.record_execution.tick();
+        this.record_efficiency.tick();
+
         this.cpu_usage = Game.cpu.getUsed();
         this.execution_count = 0;
         this.efficiency = 0;
@@ -88,10 +85,6 @@ class Kernel {
         ) {
             aftermath();
         }
-
-        this.record_cpu_usage.tick();
-        this.record_execution.tick();
-        this.record_efficiency.tick();
     }
     get report() {
         let report = `    Kernel ${this.name}:\n`;
@@ -101,13 +94,16 @@ class Kernel {
         return report;
     }
     new_entity(object) {
-        this.memory.objects[object.id] = { execution_queue: [] };
-        let entity = (this.entities[object.id] = new Entity(object.id, this));
-        entity.init(this.memory.objects);
+        let entity = (this.entities[object.id] = new Entity(
+            object.id,
+            this.memory.entities,
+            this
+        ));
+        entity.init(this.memory.entities);
         return entity;
     }
     remove_entity(id) {
-        delete this.memory.objects[id];
+        delete this.memory.entities[id];
         delete this.entities[id];
     }
     add_creep(creep) {

@@ -10,9 +10,6 @@ class Blackbox {
         this.memory.sum = this.memory.sum || 0;
         this.memory.ticks = this.memory.ticks || 0;
     }
-    init(memory) {
-        this.memory = memory[this.name];
-    }
     reset() {
         this.memory = { min: 1e9, max: 0, sum: 0, ticks: 0 };
     }
