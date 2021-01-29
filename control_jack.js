@@ -35,8 +35,8 @@ class Control_jack {
                         )
                     );
                     if (source) {
-                        jack.entity.queue(`harvest`, [source.id]);
-                        // source.memory.potential--;
+                        jack.entity.queue(`harvest`, [source.id, 1]);
+                        source.memory.potential--;
                     }
                 } else {
                     let spawn = jack.pos.findClosestByPath(

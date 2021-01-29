@@ -35,6 +35,9 @@ class Entity {
         if (this.object) {
             this.object.entity = this;
         } else {
+            while (this.execution_queue.length > 0) {
+                this.execution_queue.shift();
+            }
             this.kernel.remove_entity(this.id);
         }
     }
@@ -45,6 +48,7 @@ class Entity {
         this.execution_queue.push(this.executing);
     }
     shift() {
+        this.terminate(this.type, this.data);
         this.execution_queue.shift();
         this.executing = this.execution_queue[0] || {};
         this.type = this.executing[0] || `idle`;
@@ -96,9 +100,17 @@ class Entity {
                     `;
         return ret;
     }
+    terminate(type, data) {
+        if (this[`done_${type}`]) {
+            this[`done_${type}`](...data);
+        } else {
+            this.done_default(...data);
+        }
+    }
     idle() {
         return true;
     }
+    done_idle() {}
     default(id, ...data) {
         try {
             let target = Game.getObjectById(id),
@@ -108,6 +120,7 @@ class Entity {
             return ret != ERR_BUSY && ret != ERR_TIRED;
         } catch (err) {}
     }
+    done_default() {}
     say(message) {
         this.saying = this.saying || message;
     }
@@ -122,6 +135,12 @@ class Entity {
             this.execute(`moveTo`, [id]);
         }
         return this.object.store.getFreeCapacity(RESOURCE_ENERGY) == 0;
+    }
+    done_harvest(id, reserved) {
+        let entity = this.kernel.entities[id];
+        if (entity) {
+            entity.memory.potential += reserved;
+        }
     }
     transfer(id, resourceType, amount) {
         let target = Game.getObjectById(id),
@@ -140,13 +159,13 @@ class Entity {
         return ret == ERR_NOT_ENOUGH_RESOURCES;
     }
     spawnCreep(body, name, opts) {
-        if (this.memory.start) {
-            this.memory.start = false;
+        if (this.memory.done) {
+            this.memory.done = false;
             this.kernel.add_creep(Game.creeps[name]);
             return true;
         } else {
             if (this.call(`spawnCreep`, body, name, opts) == OK) {
-                this.memory.start = true;
+                this.memory.done = true;
             }
             return false;
         }
