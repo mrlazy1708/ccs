@@ -33,7 +33,7 @@ class Entity {
             this.object.entity = this;
         } else {
             while (this.execution_queue.length > 0) {
-                this.execution_queue.shift();
+                this.shift();
             }
             this.kernel.remove_entity(this.id);
         }
@@ -122,8 +122,9 @@ class Entity {
     say(message) {
         this.saying = this.saying || message;
     }
-    moveTo(id, opts) {
+    moveTo(id, opts = {}) {
         let target = Game.getObjectById(id);
+        opts.visualizePathStyle = opts.visualizePathStyle || {};
         this.call(`moveTo`, target, opts);
         return this.object.pos.getRangeTo(target.pos) == 0;
     }
@@ -137,7 +138,10 @@ class Entity {
     done_harvest(id, reserved) {
         let entity = this.kernel.entities[id];
         if (entity) {
+            console.log(`${entity.memory.potential} + ${reserved}`);
             entity.memory.potential += reserved;
+        } else {
+            console.log(`!!!`);
         }
     }
     transfer(id, resourceType, amount) {
