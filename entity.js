@@ -7,10 +7,10 @@ class Entity {
 
         try {
             this.name = Game.getObjectById(this.id).name;
+            this.face = this.name.split(` `);
         } catch (err) {
             return;
         }
-        this.face = this.name.split(` `);
         this.name =
             this.face.length > 2
                 ? this.name.padEnd(

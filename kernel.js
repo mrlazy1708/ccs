@@ -104,22 +104,19 @@ class Kernel {
         this.memory.objects[object.id] = { execution_queue: [] };
         let entity = (this.entities[object.id] = new Entity(object.id, this));
         entity.init(this.memory.objects);
+        return entity;
     }
     remove_entity(id) {
         delete this.memory.objects[id];
         delete this.entities[id];
     }
     add_creep(creep) {
-        if (!this.entities[creep.id]) {
-            this.new_entity(creep);
-        }
+        this.new_entity(creep);
 
         this.control_jack.add_jack(creep);
     }
     add_structure(structure) {
-        if (!this.entities[structure.id]) {
-            this.new_entity(structure);
-        }
+        this.new_entity(structure);
 
         this.control_spawn.add_spawn(structure);
     }

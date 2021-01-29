@@ -10,43 +10,54 @@ class Control_jack {
     }
     init(memory) {
         this.memory = memory.control_jack;
+
+        this.jacks = _.reduce(
+            this.memory.jacks,
+            (rst, name) => {
+                if (Game.creeps[name]) {
+                    rst.push(Game.creeps[name]);
+                } else {
+                    this.remove_jack(name);
+                }
+                return rst;
+            },
+            []
+        );
     }
     run() {
-        _.forEach(this.memory.jacks, (name) => {
-            let creep = Game.creeps[name];
-            if (creep) {
-                if (creep.entity.type == `idle`) {
-                    if (creep.store[RESOURCE_ENERGY] == 0) {
-                        let source = creep.pos.findClosestByPath(
-                            this.kernel.control_room.sources
-                        );
-                        if (source) {
-                            creep.entity.queue(`harvest`, [source.id]);
-                        }
+        _.forEach(this.jacks, (jack) => {
+            if (jack.entity.type == `idle`) {
+                if (jack.store[RESOURCE_ENERGY] == 0) {
+                    let source = jack.pos.findClosestByPath(
+                        _.filter(
+                            this.kernel.control_room.sources,
+                            (source) => source.entity.memory.potential > 0
+                        )
+                    );
+                    if (source) {
+                        jack.entity.queue(`harvest`, [source.id]);
+                        // source.memory.potential--;
+                    }
+                } else {
+                    let spawn = jack.pos.findClosestByPath(
+                        _.filter(
+                            this.kernel.control_spawn.spawns,
+                            (spawn) =>
+                                spawn.store.getFreeCapacity(RESOURCE_ENERGY) >
+                                20
+                        )
+                    );
+                    if (spawn) {
+                        jack.entity.queue(`transfer`, [
+                            spawn.id,
+                            RESOURCE_ENERGY,
+                        ]);
                     } else {
-                        let spawn = creep.pos.findClosestByPath(
-                            _.filter(
-                                this.kernel.control_spawn.spawns,
-                                (spawn) =>
-                                    spawn.store.getFreeCapacity(
-                                        RESOURCE_ENERGY
-                                    ) > 20
-                            )
-                        );
-                        if (spawn) {
-                            creep.entity.queue(`transfer`, [
-                                spawn.id,
-                                RESOURCE_ENERGY,
-                            ]);
-                        } else {
-                            creep.entity.queue(`upgradeController`, [
-                                this.kernel.control_room.core.controller.id,
-                            ]);
-                        }
+                        jack.entity.queue(`upgradeController`, [
+                            this.kernel.control_room.core.controller.id,
+                        ]);
                     }
                 }
-            } else {
-                this.remove_jack(name);
             }
         });
         if (this.size < 10) {
