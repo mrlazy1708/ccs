@@ -1,3 +1,5 @@
+const Control_spy = require("./control_spy");
+
 `use strict`;
 
 class Kernel {
@@ -15,14 +17,17 @@ class Kernel {
         this.execution_queue = new Heap(
             `execution_queue`,
             this.memory,
-            (element_1, element_2) => element_1.last_run < element_2.last_run
+            (element_1, element_2) => element_1[0] < element_2[0]
         );
 
         this.control_room = new Control_room(this.memory, this);
         this.control_jack = new Control_jack(this.memory, this);
         this.control_spawn = new Control_spawn(this.memory, this);
+        this.control_spy = new Control_spy(this.memory, this);
 
-        this.loss = [];
+        this.spawn_queue = this.control_spawn.spawn_queue;
+        this.mission_queue = this.control_spy.mission_queue;
+        this.funeral = [];
 
         this.record_cpu_usage = new Blackbox(`record_cpu_usage`, this.memory);
         this.record_execution = new Blackbox(`record_execution`, this.memory);
@@ -34,6 +39,7 @@ class Kernel {
         this.control_room.init();
         this.control_jack.init();
         this.control_spawn.init();
+        this.control_spy.init();
     }
     run() {
         this.record_cpu_usage.tick();
@@ -46,25 +52,21 @@ class Kernel {
 
         this.control_jack.run();
         this.control_spawn.run();
+        this.control_spy.run();
 
         for (
             let execution = this.execution_queue.top;
-            execution &&
-            execution.last_run < Game.time &&
-            Game.cpu.getUsed() < 5;
+            execution && execution[0] < Game.time && Game.cpu.getUsed() < 5;
             execution = this.execution_queue.top
         ) {
             this.execution_queue.pop();
-            let entity = this.entities[execution.id];
+            let entity = this.entities[execution[1]];
             if (entity) {
                 this.execution_count++;
                 // let a = Game.cpu.getUsed();
                 if (entity.run()) {
                     // console.log(Game.cpu.getUsed() - a);
-                    this.execution_queue.push({
-                        last_run: Game.time,
-                        id: execution.id,
-                    });
+                    this.execution_queue.push([Game.time, execution[1]]);
                 }
             }
         }
@@ -79,11 +81,11 @@ class Kernel {
     }
     shut() {
         for (
-            let aftermath = this.loss.pop();
-            aftermath;
-            aftermath = this.loss.pop()
+            let affair = this.funeral.pop();
+            affair;
+            affair = this.funeral.pop()
         ) {
-            aftermath();
+            affair();
         }
     }
     get report() {
@@ -107,14 +109,31 @@ class Kernel {
         delete this.entities[id];
     }
     add_creep(creep) {
-        this.new_entity(creep);
+        if (this.entities[creep.id]) {
+            return this.entities[creep.id];
+        }
 
-        this.control_jack.add_jack(creep);
+        let entity = this.new_entity(creep);
+        console.log(entity.role);
+        if (entity.role == `jack`) {
+            this.control_jack.add_jack(creep);
+        }
+        if (entity.role == `spy`) {
+            this.control_spy.add_spy(creep);
+        }
+
+        return entity;
     }
     add_structure(structure) {
-        this.new_entity(structure);
+        if (this.entities[structure.id]) {
+            return this.entities[structure.id];
+        }
+
+        let entity = this.new_entity(structure);
 
         this.control_spawn.add_spawn(structure);
+
+        return entity;
     }
     add_room(room) {
         this.control_room.add_room(room);
@@ -127,6 +146,9 @@ class Kernel {
     }
     set_core(core) {
         this.control_room.set_core(core);
+    }
+    add_remote(room_name) {
+        this.mission_queue.push([Game.time, `spy`, [room_name]]);
     }
 }
 

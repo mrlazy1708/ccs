@@ -8,6 +8,7 @@ function import_module() {
     global.Control_room = require(`control_room`);
     global.Control_jack = require(`control_jack`);
     global.Control_spawn = require(`control_spawn`);
+    global.Control_spy = require(`control_spy`);
 }
 
 function define_constant() {
@@ -16,11 +17,12 @@ function define_constant() {
     global.Dictionary = {
         idle: [`🥱`, `🥱`],
         moveTo: [`🚗`, `🎯`],
+        moveToRoom: [`🗺`, `🎯`],
         harvest: [`⛏`, `🈵`],
         transfer: [`🛢`, `🈳`],
         upgradeController: [`🔋`, `🈳`],
-
         spawnCreep: [],
+        spy: [`👀`, `🎯`],
     };
     // prettier-ignore
     global.Faces = {
@@ -37,12 +39,72 @@ function define_constant() {
                     `Nova`,`Brooklyn`,`Paisley`,`Savannah`,`Claire`,`Skylar`,`Isla`,`Genesis`,`Naomi`,`Elena`,`Caroline`,`Eliana`,`Anna`,`Maya`,`Valentina`,`Ruby`,`Kennedy`,`Ivy`,`Ariana`,`Aaliyah`,`Cora`,`Madelyn`,`Alice`,`Kinsley`,`Hailey`,`Gabriella`,`Allison`,`Gianna`,`Serenity`,`Samantha`,`Sarah`,`Autumn`,`Quinn`,`Eva`,`Piper`,`Sophie`,`Sadie`,`Delilah`,`Josephine`,`Nevaeh`,`Adeline`,`Arya`,`Emery`,`Lydia`,`Clara`,`Vivian`,`Madeline`,`Peyton`,`Julia`,`Rylee`,],
         },
     };
+    global.Opposite = {
+        TOP: BOTTOM,
+        TOP_RIGHT: BOTTOM_LEFT,
+        RIGHT: LEFT,
+        BOTTOM_RIGHT: TOP_LEFT,
+        BOTTOM: TOP,
+        BOTTOM_LEFT: TOP_RIGHT,
+        LEFT: RIGHT,
+        TOP_LEFT: BOTTOM_RIGHT,
+    };
 
     global.Dye = (string, color) => `<b style="color:${color}">${string}</b>`;
+    global.Parse = (room_name) =>
+        /^([WE])([0-9]+)([NS])([0-9]+)$/.exec(room_name);
+    global.Coordinate = (pos) => {
+        let parse = Parse(pos.roomName);
+        return [
+            (parse[1] == `W` ? -parse[2] - 1 : +parse[2]) * 50 + pos.x,
+            (parse[3] == `N` ? -parse[4] - 1 : +parse[4]) * 50 + pos.y,
+        ];
+    };
 }
 
 function set_prototype() {
     Spawn.prototype.say = () => {};
+    RoomPosition.prototype.getReachability = function () {
+        let terrain = new Room.Terrain(this.roomName),
+            x = this.x,
+            y = this.y;
+        return _.sum(
+            _.map(
+                // prettier-ignore
+                [[1, 0],[1, 1],[0, 1],[-1, 1],[-1, 0],[-1, -1],[0, -1],[1, -1],],
+                (delta) =>
+                    terrain.get(x + delta[0], y + delta[1]) == TERRAIN_MASK_WALL
+                        ? 0
+                        : 1
+            )
+        );
+    };
+    RoomPosition.prototype.getDistanceTo = function (target) {
+        if (!(target instanceof RoomPosition)) {
+            if (target.pos instanceof RoomPosition) {
+                target = target.pos;
+            } else {
+                return Infinity;
+            }
+        }
+        let cor_1 = Coordinate(this),
+            cor_2 = Coordinate(target);
+        return Math.max(
+            Math.abs(cor_1[0] - cor_2[0]),
+            Math.abs(cor_1[1] - cor_2[1])
+        );
+    };
+    RoomPosition.prototype.findClosestByDistance = function (targets) {
+        let _this = this;
+        return _.reduce(
+            targets,
+            (rst, target) => {
+                let distance = _this.getDistanceTo(target);
+                return distance < rst[1] ? [target, distance] : rst;
+            },
+            [null, Infinity]
+        )[0];
+    };
 }
 
 class System {
@@ -66,6 +128,7 @@ class System {
         this.cpu_usage = Game.cpu.getUsed();
 
         Game.system = this;
+        _.forEach(this.kernels, (kernel, name) => (Game[name] = kernel));
 
         _.forEach(this.kernels, (kernel) => kernel.init());
     }
@@ -93,20 +156,13 @@ class System {
         _.forEach(this.kernels, (kernel) => (report += kernel.report));
         return report;
     }
-    reset() {
-        delete Memory[this.name].kernels[`k0`];
-        this.kernels[`k0`] = new Kernel(`k0`, this.memory.kernels);
-        this.kernels[`k0`].init(this.memory.kernels);
-        _.forEach(Game.creeps, (creep) => this.kernels[`k0`].add1(creep.id));
-        this.kernels[`k0`].control_jack.memory.queued = 0;
-        this.kernels[`k0`].add2(Game.spawns[`Spawn1`].id);
-    }
     new_kernel(core) {
         delete this.memory.kernels[`k_${core.name}`];
         let kernel = (this.kernels[`k_${core.name}`] = new Kernel(
             `k_${core.name}`,
             this.memory.kernels
         ));
+        Game[core.name] = kernel;
         kernel.init(this.memory.kernels);
         kernel.add_room(core);
         kernel.set_core(core);

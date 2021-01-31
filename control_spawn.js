@@ -54,8 +54,8 @@ class Control_spawn {
             if (config && spawn.entity.type == `idle`) {
                 this.spawn_queue.pop();
                 config.shift();
-                config[1] = config[1] || generate_name();
-                spawn.entity.queue(`spawnCreep`, config);
+                config[2] = config[2] || generate_name();
+                spawn.entity.assign(`spawnCreep`, config);
             }
         });
     }
@@ -64,7 +64,7 @@ class Control_spawn {
     }
     remove_spawn(spawn_name) {
         _.remove(this.memory.spawns, (name) => name == spawn_name);
-        this.kernel.loss.push(() => delete Memory.spawns[spawn_name]);
+        this.kernel.funeral.push(() => delete Memory.spawns[spawn_name]);
     }
 }
 
