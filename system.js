@@ -173,6 +173,7 @@ class System {
         kernel.add_room(core);
         kernel.set_core(core);
         kernel.control_jack.memory.queued = 0;
+        kernel.control_spy.memory.queued = 0;
     }
 }
 
