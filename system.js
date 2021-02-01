@@ -12,8 +12,10 @@ function import_module() {
 }
 
 function define_constant() {
+    global.LableLength = 25;
+    global.LeadingSpaces = ` `.repeat(LableLength);
     // prettier-ignore
-    global.Meaning = [`OK`,`ERR_NOT_OWNER`,`ERR_NO_PATH`,`ERR_NAME_EXISTS`,`ERR_BUSY`,`ERR_NOT_FOUND`,`ERR_NOT_ENOUGH_RESOURCES`,`ERR_INVALID_TARGET`,`ERR_FULL`,`ERR_NOT_IN_RANGE`,`ERR_INVALID_ARGS`,`ERR_TIRED`,`ERR_NO_BODYPART`,`ERR_NOT_ENOUGH_EXTENSIONS`,`ERR_RCL_NOT_ENOUGH`,`ERR_GCL_NOT_ENOUGH`,];
+    global.MeaningOf = [`OK`,`ERR_NOT_OWNER`,`ERR_NO_PATH`,`ERR_NAME_EXISTS`,`ERR_BUSY`,`ERR_NOT_FOUND`,`ERR_NOT_ENOUGH_RESOURCES`,`ERR_INVALID_TARGET`,`ERR_FULL`,`ERR_NOT_IN_RANGE`,`ERR_INVALID_ARGS`,`ERR_TIRED`,`ERR_NO_BODYPART`,`ERR_NOT_ENOUGH_EXTENSIONS`,`ERR_RCL_NOT_ENOUGH`,`ERR_GCL_NOT_ENOUGH`,];
     global.Dictionary = {
         idle: [`🥱`, `🥱`],
         moveTo: [`🚗`, `🎯`],
@@ -118,7 +120,7 @@ class System {
 
         this.kernels = _.mapValues(
             (this.memory.kernels = this.memory.kernels || {}),
-            (_, name) => new Kernel(name, this.memory.kernels)
+            (_, name) => new Kernel(name, this.memory.kernels, this)
         );
 
         this.record_population = new Blackbox(`record_population`, this.memory);
@@ -126,6 +128,7 @@ class System {
     }
     init() {
         this.cpu_usage = Game.cpu.getUsed();
+        this.log = `System ${this.name} run at ${Game.time}:\n`;
 
         Game.system = this;
         _.forEach(this.kernels, (kernel, name) => (Game[name] = kernel));
@@ -142,6 +145,8 @@ class System {
         Memory[this.name] = this.memory;
 
         _.forEach(this.kernels, (kernel) => kernel.shut());
+
+        console.log(this.log);
 
         this.record_cpu_usage.record(
             (this.cpu_usage = Game.cpu.getUsed() - this.cpu_usage)
@@ -160,7 +165,8 @@ class System {
         delete this.memory.kernels[`k_${core.name}`];
         let kernel = (this.kernels[`k_${core.name}`] = new Kernel(
             `k_${core.name}`,
-            this.memory.kernels
+            this.memory.kernels,
+            this
         ));
         Game[core.name] = kernel;
         kernel.init(this.memory.kernels);

@@ -12,18 +12,19 @@ class Entity {
         this.type = this.executing[0] || `idle`;
         this.data = this.executing[1] || [];
 
-        this.name = (Game.getObjectById(this.id) || {}).name || this.id;
-        this.face = this.name.split(` `);
+        this.lable = (Game.getObjectById(this.id) || {}).name || this.id;
+        this.face = this.lable.split(` `);
         if (this.face.length > 2) {
-            this.name = this.name.padEnd(
-                this.name.length -
+            this.lable = this.lable.padEnd(
+                this.lable.length -
                     this.face[1].length -
                     this.face[2].length +
-                    16
+                    LableLength -
+                    4
             );
             this.face = this.face[0];
         } else {
-            this.name = `🌈 ${this.name.padEnd(17)}`;
+            this.lable = `🌈 ${this.lable.padEnd(LableLength - 3)}`;
             this.face = `🌈`;
         }
     }
@@ -34,6 +35,9 @@ class Entity {
         this.object.memory.role = role;
     }
     init() {
+        this.log = `${this.lable}`;
+        this.saying = undefined;
+
         this.object = Game.getObjectById(this.id);
         if (this.object) {
             this.object.entity = this;
@@ -64,22 +68,18 @@ class Entity {
         this.push(type, data);
     }
     run() {
-        this.log = `${this.name}`;
-        this.saying = undefined;
         this.execute(this.type, this.data);
         this.object.say(
             `${this.face}${this.kernel.funeral.length > 0 ? `🕯` : this.saying}`,
             true
         );
-        this.log = this.log.substring(0, this.log.length - 21);
-        console.log(
-            this.log +
-                ` -> ${
-                    this.type == `idle`
-                        ? Dye(`Finish`, `Yellow`)
-                        : Dye(`Continue`, `Blue`)
-                }`
-        );
+        this.kernel.log +=
+            this.log.substring(0, this.log.length - LableLength - 1) +
+            ` -> ${
+                this.type == `idle`
+                    ? Dye(`Finish`, `Yellow`)
+                    : Dye(`Continue`, `Blue`)
+            }\n`;
         return this.type != `idle`;
     }
     execute(type, data) {
@@ -97,8 +97,7 @@ class Entity {
             ret = this.object[type](...data);
         // console.log(Game.cpu.getUsed() - cpu_usage_start);
         this.kernel.efficiency += Game.cpu.getUsed() - cpu_usage_start;
-        this.log += ` -> ${Dye(Meaning[-ret], `Red`)}
-                    `;
+        this.log += ` -> ${Dye(MeaningOf[-ret], `Red`)}\n${LeadingSpaces}`;
         return ret;
     }
     terminate(type, data) {

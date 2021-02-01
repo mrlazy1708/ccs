@@ -3,9 +3,10 @@ const Control_spy = require("./control_spy");
 `use strict`;
 
 class Kernel {
-    constructor(name, memory) {
+    constructor(name, memory, system) {
         this.name = name;
         this.memory = memory[this.name] = memory[this.name] || {};
+        this.system = system;
 
         this.memory.entities = this.memory.entities =
             this.memory.entities || {};
@@ -34,6 +35,8 @@ class Kernel {
         this.record_efficiency = new Blackbox(`record_efficiency`, this.memory);
     }
     init() {
+        this.log = `\nKernel ${this.name} :\n\n`;
+
         _.forEach(this.entities, (entity) => entity.init());
 
         this.control_room.init();
@@ -87,6 +90,7 @@ class Kernel {
         ) {
             affair();
         }
+        this.system.log += this.log;
     }
     get report() {
         let report = `    Kernel ${this.name}:\n`;
@@ -114,7 +118,6 @@ class Kernel {
         }
 
         let entity = this.new_entity(creep);
-        console.log(entity.role);
         if (entity.role == `jack`) {
             this.control_jack.add_jack(creep);
         }
