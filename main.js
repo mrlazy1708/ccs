@@ -1,7 +1,6 @@
 `use strict`;
 
 const System = require(`system`);
-const Control_room = require("./control_room");
 
 // delete Memory.ccs;
 console.log(`restart!`);
