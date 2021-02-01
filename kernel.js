@@ -1,5 +1,3 @@
-const Control_spy = require("./control_spy");
-
 `use strict`;
 
 class Kernel {
