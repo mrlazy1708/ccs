@@ -51,7 +51,7 @@ class Control_spy {
     }
     remove_spy(spy_name) {
         _.remove(this.memory.spies, (name) => name == spy_name);
-        this.kernel.funeral.push(() => delete this.memory.creeps[spy_name]);
+        this.kernel.funeral.push(() => delete Memory.creeps[spy_name]);
     }
 }
 

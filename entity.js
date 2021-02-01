@@ -68,7 +68,9 @@ class Entity {
         this.push(type, data);
     }
     run() {
-        this.execute(this.type, this.data);
+        if (this.execute(this.type, this.data)) {
+            this.shift();
+        }
         this.object.say(
             `${this.face}${this.kernel.funeral.length > 0 ? `🕯` : this.saying}`,
             true
@@ -87,10 +89,10 @@ class Entity {
         let ret = this[type] ? this[type](...data) : this.default(...data);
         if (ret) {
             this.say(Dictionary[type][1]);
-            this.shift(); // 继续
         } else {
             this.say(Dictionary[type][0]);
         }
+        return ret;
     }
     call(type, ...data) {
         let cpu_usage_start = Game.cpu.getUsed(),
@@ -110,7 +112,6 @@ class Entity {
     idle() {
         return true;
     }
-    done_idle() {}
     default(id, ...data) {
         try {
             let target = Game.getObjectById(id),
@@ -120,7 +121,10 @@ class Entity {
             return ret != ERR_BUSY && ret != ERR_TIRED;
         } catch (err) {}
     }
-    done_default() {}
+    done_default() {
+        _.forEach(_.keys(this.memory), (key) => delete this.memory[key]);
+        this.memory.execution_queue = this.execution_queue;
+    }
     say(message) {
         this.saying = this.saying || message;
     }
@@ -193,7 +197,7 @@ class Entity {
     }
     spawnCreep(body, opts, name) {
         if (this.memory.done) {
-            this.memory.done = false;
+            this.log += `\n${LeadingSpaces}`;
             this.kernel.add_creep(Game.creeps[name]);
             return true;
         } else {
@@ -204,10 +208,11 @@ class Entity {
         }
     }
     spy(room_name) {
+        console.log(this.memory.room);
         if (this.memory.room != room_name) {
-            this.log += `
-                    `;
+            this.log += `\n${LeadingSpaces}`;
             this.execute(`moveToRoom`, [room_name]);
+            return false;
         } else {
             this.kernel.add_room(Game.rooms[room_name]);
             return true;

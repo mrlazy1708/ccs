@@ -174,13 +174,6 @@ class System {
         kernel.set_core(core);
         kernel.control_jack.memory.queued = 0;
     }
-    spawn(name) {
-        this.kernels[`k0`].add1(Game.spawns[`Spawn1`].id);
-        this.kernels[`k0`].execute(Game.spawns[`Spawn1`].id, `spawnCreep`, [
-            [WORK, CARRY, MOVE],
-            name,
-        ]);
-    }
 }
 
 module.exports = System;
