@@ -1,26 +1,13 @@
 `use strict`;
 
-class Control_jack {
+class Base_jack extends Base {
     constructor(memory, kernel) {
-        this.memory = memory.control_jack = memory.control_jack || {
-            jacks: [],
-            queued: 0,
-        };
-        this.kernel = kernel;
+        super(`jack`, memory, kernel);
+        this.memory.jacks = this.memory.jacks || [];
+        this.memory.queued = this.memory.queued || 0;
     }
     init() {
-        this.jacks = _.reduce(
-            this.memory.jacks,
-            (rst, name) => {
-                if (Game.creeps[name]) {
-                    rst.push(Game.creeps[name]);
-                } else {
-                    this.remove_jack(name);
-                }
-                return rst;
-            },
-            []
-        );
+        this.update(`jacks`, Game.getCreepByName, this.remove_creep);
     }
     run() {
         _.forEach(this.jacks, (jack) => {
@@ -28,7 +15,7 @@ class Control_jack {
                 if (jack.store[RESOURCE_ENERGY] == 0) {
                     let source = jack.pos.findClosestByDistance(
                         _.filter(
-                            this.kernel.control_room.sources,
+                            this.kernel.base_room.sources,
                             (source) => source.entity.memory.potential > 0
                         )
                     );
@@ -39,7 +26,7 @@ class Control_jack {
                 } else {
                     let spawn = jack.pos.findClosestByDistance(
                         _.filter(
-                            this.kernel.control_spawn.spawns,
+                            this.kernel.base_spawn.spawns,
                             (spawn) =>
                                 spawn.store.getFreeCapacity(RESOURCE_ENERGY) >
                                 20
@@ -52,13 +39,16 @@ class Control_jack {
                         ]);
                     } else {
                         jack.entity.assign(`upgradeController`, [
-                            this.kernel.control_room.core.controller.id,
+                            this.kernel.base_room.core.controller.id,
                         ]);
                     }
                 }
             }
         });
-        if (this.size < this.kernel.control_room.sources.length * 5) {
+        if (
+            this.memory.jacks.length + this.memory.queued <
+            this.kernel.base_room.sources.length * 5
+        ) {
             this.kernel.spawn_queue.push([
                 Game.time,
                 [WORK, CARRY, MOVE],
@@ -67,17 +57,6 @@ class Control_jack {
             this.memory.queued++;
         }
     }
-    add_jack(jack) {
-        this.memory.jacks.push(jack.name);
-        this.memory.queued--;
-    }
-    remove_jack(jack_name) {
-        _.remove(this.memory.jacks, (name) => name == jack_name);
-        this.kernel.funeral.push(() => delete Memory.creeps[jack_name]);
-    }
-    get size() {
-        return this.memory.jacks.length + this.memory.queued;
-    }
 }
 
-module.exports = Control_jack;
+module.exports = Base_jack;

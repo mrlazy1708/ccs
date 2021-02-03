@@ -1,8 +1,8 @@
 `use strict`;
 
-class Control_room {
+class Base_room {
     constructor(memory, kernel) {
-        this.memory = memory.control_room = memory.control_room || {
+        this.memory = memory.base_room = memory.base_room || {
             core: null,
             rooms: [],
             sources: [],
@@ -17,17 +17,19 @@ class Control_room {
         ); //funeral?
     }
     add_room(room) {
+        if (_.find(this.memory.rooms, (name) => name == room.name)) {
+            throw new Error(`room ${room.name} exists in ${this.kernel.name}!`);
+        }
         this.memory.rooms.push(room.name);
-        this.rooms.push(room);
 
         let sources = room.find(FIND_SOURCES);
         _.forEach(sources, (source) => {
+            this.memory.sources.push(source.id);
             let entity = this.kernel.new_entity(source);
             entity.memory.potential = source.pos.getReachability();
-
-            this.memory.sources.push(source.id);
-            this.sources.push(source);
         });
+
+        this.init();
     }
     set_core(core) {
         if (this.core) {
@@ -41,17 +43,8 @@ class Control_room {
         _.remove(this.memory.rooms, (name) => name == room_name);
         _.remove(this.rooms, (room) => !room || room.name == room_name);
 
-        _.remove(
-            this.memory.sources,
-            (id) =>
-                !Game.getObjectById(id) ||
-                Game.getObjectById(id).pos.roomName == room_name
-        );
-        _.remove(
-            this.sources,
-            (source) => !source || source.pos.roomName == room_name
-        );
+        this.init();
     }
 }
 
-module.exports = Control_room;
+module.exports = Base_room;

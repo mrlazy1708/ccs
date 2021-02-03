@@ -1,14 +1,15 @@
 `use strict`;
 
 function import_module() {
+    global.Base = require(`base`);
     global.Blackbox = require(`blackbox`);
     global.Kernel = require(`kernel`);
     global.Heap = require(`heap`);
     global.Entity = require(`entity`);
-    global.Control_room = require(`control_room`);
-    global.Control_jack = require(`control_jack`);
-    global.Control_spawn = require(`control_spawn`);
-    global.Control_spy = require(`control_spy`);
+    global.Base_room = require(`base_room`);
+    global.Base_jack = require(`base_jack`);
+    global.Base_spawn = require(`base_spawn`);
+    global.Base_spy = require(`base_spy`);
 }
 
 function define_constant() {
@@ -130,6 +131,8 @@ class System {
         this.cpu_usage = Game.cpu.getUsed();
         this.log = `System ${this.name} run at ${Game.time}:\n`;
 
+        Game.getCreepByName = (name) => Game.creeps[name];
+        Game.getRoomByName = (name) => Game.rooms[name];
         Game.system = this;
         _.forEach(this.kernels, (kernel, name) => (Game[name] = kernel));
 
@@ -172,8 +175,8 @@ class System {
         kernel.init(this.memory.kernels);
         kernel.add_room(core);
         kernel.set_core(core);
-        kernel.control_jack.memory.queued = 0;
-        kernel.control_spy.memory.queued = 0;
+        kernel.base_jack.memory.queued = 0;
+        kernel.base_spy.memory.queued = 0;
     }
 }
 

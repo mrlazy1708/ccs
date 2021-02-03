@@ -20,12 +20,10 @@ function generate_name() {
     return name;
 }
 
-class Control_spawn {
+class Base_spawn extends Base {
     constructor(memory, kernel) {
-        this.memory = memory.control_spawn = memory.control_spawn || {
-            spawns: [],
-        };
-        this.kernel = kernel;
+        super(`spawn`, memory, kernel);
+        this.memory.spawns = this.memory.spawns || [];
 
         this.spawn_queue = new Heap(
             `spawn_queue`,
@@ -34,19 +32,7 @@ class Control_spawn {
         );
     }
     init() {
-        this.spawns = _.reduce(
-            this.memory.spawns,
-            (rst, name) => {
-                let spawn = Game.spawns[name];
-                if (spawn) {
-                    rst.push(spawn);
-                } else {
-                    this.remove_spawn(name);
-                }
-                return rst;
-            },
-            []
-        );
+        this.update(`spawns`, Game.getObjectById, this.remove_structure);
     }
     run() {
         _.forEach(this.spawns, (spawn) => {
@@ -59,13 +45,6 @@ class Control_spawn {
             }
         });
     }
-    add_spawn(spawn) {
-        this.memory.spawns.push(spawn.name);
-    }
-    remove_spawn(spawn_name) {
-        _.remove(this.memory.spawns, (name) => name == spawn_name);
-        this.kernel.funeral.push(() => delete Memory.spawns[spawn_name]);
-    }
 }
 
-module.exports = Control_spawn;
+module.exports = Base_spawn;
