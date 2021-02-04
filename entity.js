@@ -195,17 +195,24 @@ class Entity {
         }
         return ret == ERR_NOT_ENOUGH_RESOURCES;
     }
-    spawnCreep(body, opts, name) {
+    spawnCreep(body, role, name) {
         if (this.memory.done) {
             this.log += `\n${LeadingSpaces}`;
             this.kernel.add_creep(Game.creeps[name]);
             return true;
         } else {
-            if (this.call(`spawnCreep`, body, name, opts) == OK) {
+            let ret = this.call(`spawnCreep`, body, name, {
+                memory: { role: role },
+            });
+            if (ret == OK) {
                 this.memory.done = true;
             }
-            return false;
+            return ret == ERR_INVALID_ARGS;
         }
+    }
+    done_spawnCreep(_body, role, _name) {
+        this.kernel.base_spawn.memory.queued[role]--;
+        this.memory.done = false;
     }
     spy(room_name) {
         console.log(this.memory.room);

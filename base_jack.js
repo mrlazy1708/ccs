@@ -4,7 +4,6 @@ class Base_jack extends Base {
     constructor(memory, kernel) {
         super(`jack`, memory, kernel);
         this.memory.jacks = this.memory.jacks || [];
-        this.memory.queued = this.memory.queued || 0;
     }
     init() {
         this.update(`jacks`, Game.getCreepByName, this.remove_creep);
@@ -46,15 +45,10 @@ class Base_jack extends Base {
             }
         });
         if (
-            this.memory.jacks.length + this.memory.queued <
+            this.memory.jacks.length + this.kernel.queued(`jack`) <
             this.kernel.base_room.sources.length * 5
         ) {
-            this.kernel.spawn_queue.push([
-                Game.time,
-                [WORK, CARRY, MOVE],
-                { memory: { role: `jack` } },
-            ]);
-            this.memory.queued++;
+            this.kernel.require(1, [WORK, CARRY, MOVE], `jack`);
         }
     }
 }

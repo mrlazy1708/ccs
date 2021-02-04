@@ -175,8 +175,6 @@ class System {
         kernel.init(this.memory.kernels);
         kernel.add_room(core);
         kernel.set_core(core);
-        kernel.base_jack.memory.queued = 0;
-        kernel.base_spy.memory.queued = 0;
     }
 }
 

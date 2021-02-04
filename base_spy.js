@@ -4,7 +4,6 @@ class Base_spy extends Base {
     constructor(memory, kernel) {
         super(`spy`, memory, kernel);
         this.memory.spies = this.memory.spies || [];
-        this.memory.queued = this.memory.queued || 0;
 
         this.mission_queue = new Heap(
             `mission_queue`,
@@ -23,13 +22,8 @@ class Base_spy extends Base {
                 spy.entity.assign(mission[1], mission[2]);
             }
         });
-        if (this.mission_queue.size > this.memory.queued) {
-            this.kernel.spawn_queue.push([
-                Game.time,
-                [MOVE],
-                { memory: { role: `spy` } },
-            ]);
-            this.memory.queued++;
+        if (this.mission_queue.size > this.kernel.queued(`spy`)) {
+            this.kernel.require(1, [MOVE], `spy`);
         }
     }
 }

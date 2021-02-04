@@ -25,6 +25,7 @@ class Base_spawn extends Base {
         super(`spawn`, memory, kernel);
         this.memory.spawns = this.memory.spawns || [];
 
+        this.memory.queued = this.memory.queued || {};
         this.spawn_queue = new Heap(
             `spawn_queue`,
             this.memory,
@@ -44,6 +45,13 @@ class Base_spawn extends Base {
                 spawn.entity.assign(`spawnCreep`, config);
             }
         });
+    }
+    require(rank, body, role) {
+        this.memory.queued[role] = this.queued(role) + 1;
+        this.spawn_queue.push([Game.time + rank * 16, body, role]);
+    }
+    queued(role) {
+        return this.memory.queued[role] || 0;
     }
 }
 

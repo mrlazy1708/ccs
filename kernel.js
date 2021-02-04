@@ -20,12 +20,15 @@ class Kernel {
         );
 
         this.base_room = new Base_room(this.memory, this);
-        this.base_jack = new Base_jack(this.memory, this);
-        this.base_spawn = new Base_spawn(this.memory, this);
-        this.base_spy = new Base_spy(this.memory, this);
 
+        this.base_jack = new Base_jack(this.memory, this);
+
+        this.base_spawn = new Base_spawn(this.memory, this);
         this.spawn_queue = this.base_spawn.spawn_queue;
+
+        this.base_spy = new Base_spy(this.memory, this);
         this.mission_queue = this.base_spy.mission_queue;
+
         this.funeral = [];
 
         this.record_cpu_usage = new Blackbox(`record_cpu_usage`, this.memory);
@@ -36,7 +39,6 @@ class Kernel {
         this.log = `\nKernel ${this.name} :\n\n`;
 
         _.forEach(this.entities, (entity) => entity.init());
-
         this.base_room.init();
         this.base_jack.init();
         this.base_spawn.init();
@@ -150,6 +152,12 @@ class Kernel {
     }
     add_remote(room_name) {
         this.mission_queue.push([Game.time, `spy`, [room_name]]);
+    }
+    require(...args) {
+        return this.base_spawn.require(...args);
+    }
+    queued(...args) {
+        return this.base_spawn.queued(...args);
     }
 }
 

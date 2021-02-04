@@ -17,12 +17,12 @@ module.exports.loop = function () {
             }
         });
     };
-    try {
-        system.init();
-        system.run();
-        system.shut();
-    } catch (err) {
-        console.log(err);
-        Game.reset();
-    }
+    // try {
+    system.init();
+    system.run();
+    system.shut();
+    // } catch (err) {
+    //     console.log(err);
+    //     Game.reset();
+    // }
 };
