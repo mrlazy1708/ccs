@@ -20,7 +20,7 @@ class Base_room extends Base {
             entity.memory.potential = source.pos.getReachability();
             this.add(`sources`, Game.getObjectById, source.id);
         });
-    }
+    } 
     set_core(core) {
         this.memory.core = core.name;
         this.core = core;
