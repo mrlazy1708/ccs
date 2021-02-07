@@ -12,54 +12,43 @@ class Base {
                 if (derive(key)) {
                     rst.push(derive(key));
                 } else {
-                    fail(key);
+                    fail(type, derive, key);
                 }
                 return rst;
             },
             []
         );
     }
-    add_creep(type, creep) {
-        if (_.find(this.memory[type], (name) => name == creep.name)) {
-            throw new Error(`creep ${creep.name} exists!`);
+    add(type, derive, object_key) {
+        if (_.find(this.memory[type], (key) => key == object_key)) {
+            throw new Error(`${object_key} exists in ${type}!`);
+        } else {
+            this.memory[type].push(object_key);
+            this.update(type, derive, this.remove);
         }
-        this.memory[type].push(creep.name);
-
-        this.update(type, Game.getCreepByName, this.remove_creep);
+    }
+    remove(type, derive, object_key) {
+        _.remove(this.memory[type], (key) => key == object_key);
+        this.update(type, derive, this.remove);
+    }
+    add_creep(type, creep) {
+        this.add(type, Game.getCreepByName, creep.name);
     }
     remove_creep(type, creep_name) {
-        _.remove(this.memory[type], (name) => name == creep_name);
-        this.kernel.funeral.push(() => delete Memory.creeps[jack_name]);
-
-        this.update(type, Game.getCreepByName, this.remove_creep);
+        this.remove(type, Game.getCreepByName, creep_name);
+        this.kernel.funeral.push(() => delete Memory.creeps[creep_name]);
     }
     add_structure(type, structure) {
-        if (_.find(this.memory[type], (id) => id == structure.id)) {
-            throw new Error(`structure ${structure.id} exists!`);
-        }
-        this.memory[type].push(structure.id);
-
-        this.update(type, Game.getObjectById, this.remove_structure);
+        this.add(type, Game.getObjectById, structure.id);
     }
     remove_structure(type, structure_id) {
-        _.remove(this.memory[type], (id) => id == structure_id);
-        this.kernel.funeral.push(() => {});
-
-        this.update(type, Game.getObjectById, this.remove_structure);
+        this.remove(type, Game.getObjectById, structure_id);
     }
     add_room(type, room) {
-        if (_.find(this.memory[type], (name) => name == room.name)) {
-            throw new Error(`room ${room.name} exists!`);
-        }
-        this.memory[type].push(room.name);
-
-        this.update(type, Game.getRoomByName, this.remove_room);
+        this.add(type, Game.getRoomByName, room.name);
     }
     remove_room(type, room_name) {
-        _.remove(this.memory[type], (name) => name == room_name);
-        this.kernel.funeral.push(() => {});
-
-        this.update(type, Game.getRoomByName, this.remove_room);
+        this.remove(type, Game.getRoomByName, room_name);
     }
 }
 
