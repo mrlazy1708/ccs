@@ -26,14 +26,10 @@ class Base_spawn extends Base {
         this.memory.spawns = this.memory.spawns || [];
 
         this.memory.queued = this.memory.queued || {};
-        this.spawn_queue = new Heap(
-            `spawn_queue`,
-            this.memory,
-            (sm1, sm2) => sm1[0] > sm2[0]
-        );
+        this.spawn_queue = new Heap(`spawn_queue`, this.memory);
     }
     init() {
-        this.update(`spawns`, Game.getObjectById, this.remove_structure);
+        this.update(`spawns`, Game.getObjectById, `remove_structure`);
     }
     run() {
         _.forEach(this.spawns, (spawn) => {

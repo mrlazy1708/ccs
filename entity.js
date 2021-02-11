@@ -130,7 +130,7 @@ class Entity {
     }
     moveTo(id, opts = {}) {
         let target = Game.getObjectById(id);
-        opts.visualizePathStyle = opts.visualizePathStyle || {};
+        // opts.visualizePathStyle = opts.visualizePathStyle || {};
         this.call(`moveTo`, target, opts);
         return this.object.pos.getRangeTo(target.pos) == 0;
     }

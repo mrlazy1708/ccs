@@ -1,15 +1,16 @@
 `use strict`;
 
 function import_module() {
-    global.Base = require(`base`);
     global.Blackbox = require(`blackbox`);
-    global.Kernel = require(`kernel`);
     global.Heap = require(`heap`);
-    global.Entity = require(`entity`);
+    global.Graphic = require(`graphic`);
+    global.Kernel = require(`kernel`);
+    global.Base = require(`base`);
     global.Base_room = require(`base_room`);
     global.Base_jack = require(`base_jack`);
     global.Base_spawn = require(`base_spawn`);
     global.Base_spy = require(`base_spy`);
+    global.Entity = require(`entity`);
 }
 
 function define_constant() {
@@ -42,6 +43,17 @@ function define_constant() {
                     `Nova`,`Brooklyn`,`Paisley`,`Savannah`,`Claire`,`Skylar`,`Isla`,`Genesis`,`Naomi`,`Elena`,`Caroline`,`Eliana`,`Anna`,`Maya`,`Valentina`,`Ruby`,`Kennedy`,`Ivy`,`Ariana`,`Aaliyah`,`Cora`,`Madelyn`,`Alice`,`Kinsley`,`Hailey`,`Gabriella`,`Allison`,`Gianna`,`Serenity`,`Samantha`,`Sarah`,`Autumn`,`Quinn`,`Eva`,`Piper`,`Sophie`,`Sadie`,`Delilah`,`Josephine`,`Nevaeh`,`Adeline`,`Arya`,`Emery`,`Lydia`,`Clara`,`Vivian`,`Madeline`,`Peyton`,`Julia`,`Rylee`,],
         },
     };
+    // prettier-ignore
+    global.Directions = [[0, -1],[1, -1],[1, 0],[1, 1],[0, 1],[-1, 1],[-1, 0],[-1, -1],];
+    // prettier-ignore
+    global.Perpendiculars = [[0, -1],[1, 0],[0, 1],[-1, 0],];
+    // prettier-ignore
+    global.Diagonals = [[-1, 1],[-1, -1],[1, -1],[1, 1],];
+    global.MoveCost = {
+        wall: Infinity,
+        swamp: 3,
+        plain: 1,
+    };
     global.Opposite = {
         TOP: BOTTOM,
         TOP_RIGHT: BOTTOM_LEFT,
@@ -63,22 +75,61 @@ function define_constant() {
             (parse[3] == `N` ? -parse[4] - 1 : +parse[4]) * 50 + pos.y,
         ];
     };
+    global.Square = (init = 0) =>
+        Array.from({ length: 50 }, (_) =>
+            Array.from({ length: 50 }, (_) => init)
+        );
+    global.Check = (u) => u >= 0 && u < 50;
+    global.Frame = (range) =>
+        range == 0
+            ? [[0, 0]]
+            : _.flatten(
+                  _.zipWith(Diagonals, Perpendiculars, ([x0, y0], [dx, dy]) => {
+                      (x0 *= range), (y0 *= range);
+                      return Array.from({ length: range * 2 }, (_) => [
+                          (x0 += dx),
+                          (y0 += dy),
+                      ]);
+                  })
+              );
 }
 
 function set_prototype() {
+    Array.prototype.empty = function () {
+        return this.length == 0;
+    };
+    Array.prototype.last = function () {
+        return this[this.length - 1];
+    };
     Spawn.prototype.say = () => {};
+    Room.prototype.terrain = function (map = _.identity) {
+        return _.chunk(
+            _.map(this.getTerrain().getRawBuffer(), (value) =>
+                map(
+                    value & TERRAIN_MASK_WALL
+                        ? `wall`
+                        : value & TERRAIN_MASK_SWAMP
+                        ? `swamp`
+                        : `plain`
+                )
+            ),
+            50
+        );
+    };
+    Room.prototype.draw = function (group, type, ...args) {
+        this.memory[group] = this.memory[group] || [];
+        this.memory[group].push([type, ...args]);
+        this.memory[visual];
+    };
     RoomPosition.prototype.getReachability = function () {
         let terrain = new Room.Terrain(this.roomName),
             x = this.x,
             y = this.y;
         return _.sum(
-            _.map(
-                // prettier-ignore
-                [[1, 0],[1, 1],[0, 1],[-1, 1],[-1, 0],[-1, -1],[0, -1],[1, -1],],
-                (delta) =>
-                    terrain.get(x + delta[0], y + delta[1]) == TERRAIN_MASK_WALL
-                        ? 0
-                        : 1
+            _.map(Directions, (delta) =>
+                terrain.get(x + delta[0], y + delta[1]) == TERRAIN_MASK_WALL
+                    ? 0
+                    : 1
             )
         );
     };
@@ -119,6 +170,8 @@ class System {
         define_constant();
         set_prototype();
 
+        this.graphic = new Graphic(this.memory, this);
+
         this.kernels = _.mapValues(
             (this.memory.kernels = this.memory.kernels || {}),
             (_, name) => new Kernel(name, this.memory.kernels, this)
@@ -133,8 +186,11 @@ class System {
 
         Game.getCreepByName = (name) => Game.creeps[name];
         Game.getRoomByName = (name) => Game.rooms[name];
+        Game.getVisualByName = (name) => new RoomVisual(name);
         Game.system = this;
         _.forEach(this.kernels, (kernel, name) => (Game[name] = kernel));
+
+        this.graphic.init();
 
         _.forEach(this.kernels, (kernel) => kernel.init());
     }
@@ -145,9 +201,11 @@ class System {
         _.forEach(this.kernels, (kernel) => kernel.run());
     }
     shut() {
-        Memory[this.name] = this.memory;
+        this.graphic.shut();
 
         _.forEach(this.kernels, (kernel) => kernel.shut());
+
+        Memory[this.name] = this.memory;
 
         console.log(this.log);
 
@@ -174,7 +232,7 @@ class System {
         Game[core.name] = kernel;
         kernel.init(this.memory.kernels);
         kernel.add_room(core);
-        kernel.set_core(core);
+        kernel.base_room.set_core(core);
     }
 }
 

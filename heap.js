@@ -4,7 +4,7 @@ class Heap {
     constructor(name, memory, predictor) {
         this.name = name;
         this.memory = memory[this.name] = memory[this.name] || [null];
-        this.predictor = predictor;
+        this.predictor = predictor || ((e1, e2) => e1[0] < e2[0]);
     }
     push(element) {
         this.memory.push(element);

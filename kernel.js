@@ -13,11 +13,7 @@ class Kernel {
             (_, id, memory) => new Entity(id, memory, this)
         );
 
-        this.execution_queue = new Heap(
-            `execution_queue`,
-            this.memory,
-            (element_1, element_2) => element_1[0] < element_2[0]
-        );
+        this.execution_queue = new Heap(`execution_queue`, this.memory);
 
         this.base_room = new Base_room(this.memory, this);
 
@@ -39,6 +35,7 @@ class Kernel {
         this.log = `\nKernel ${this.name} :\n\n`;
 
         _.forEach(this.entities, (entity) => entity.init());
+
         this.base_room.init();
         this.base_jack.init();
         this.base_spawn.init();
@@ -147,17 +144,12 @@ class Kernel {
         let spawns = room.find(FIND_MY_SPAWNS);
         _.forEach(spawns, (spawn) => this.add_structure(spawn));
     }
-    set_core(core) {
-        this.base_room.set_core(core);
-    }
     add_remote(room_name) {
         this.mission_queue.push([Game.time, `spy`, [room_name]]);
     }
-    require(...args) {
-        return this.base_spawn.require(...args);
-    }
-    queued(...args) {
-        return this.base_spawn.queued(...args);
+    ok() {
+        this.base_room.plan_room(this.base_room.core);
+        this.system.graphic.shut();
     }
 }
 

@@ -4,6 +4,7 @@ class Base {
     constructor(name, memory, kernel) {
         this.memory = memory[`base_${name}`] = memory[`base_${name}`] || {};
         this.kernel = kernel;
+        this.system = this.kernel.system;
     }
     update(type, derive, fail) {
         this[type] = _.reduce(
@@ -11,8 +12,8 @@ class Base {
             (rst, key) => {
                 if (derive(key)) {
                     rst.push(derive(key));
-                } else {
-                    fail(type, derive, key);
+                } else if (fail) {
+                    this[fail](type, derive, key);
                 }
                 return rst;
             },
@@ -24,12 +25,12 @@ class Base {
             throw new Error(`${object_key} exists in ${type}!`);
         } else {
             this.memory[type].push(object_key);
-            this.update(type, derive, this.remove);
+            this.update(type, derive);
         }
     }
     remove(type, derive, object_key) {
         _.remove(this.memory[type], (key) => key == object_key);
-        this.update(type, derive, this.remove);
+        this.update(type, derive);
     }
     add_creep(type, creep) {
         this.add(type, Game.getCreepByName, creep.name);

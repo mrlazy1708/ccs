@@ -6,7 +6,7 @@ class Base_jack extends Base {
         this.memory.jacks = this.memory.jacks || [];
     }
     init() {
-        this.update(`jacks`, Game.getCreepByName, this.remove_creep);
+        this.update(`jacks`, Game.getCreepByName, `remove_creep`);
     }
     run() {
         _.forEach(this.jacks, (jack) => {
@@ -45,10 +45,10 @@ class Base_jack extends Base {
             }
         });
         if (
-            this.memory.jacks.length + this.kernel.queued(`jack`) <
+            this.memory.jacks.length + this.kernel.base_spawn.queued(`jack`) <
             this.kernel.base_room.sources.length * 5
         ) {
-            this.kernel.require(1, [WORK, CARRY, MOVE], `jack`);
+            this.kernel.base_spawn.require(1, [WORK, CARRY, MOVE], `jack`);
         }
     }
 }
