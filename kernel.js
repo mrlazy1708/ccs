@@ -15,15 +15,15 @@ class Kernel {
 
         this.execution_queue = new Heap(`execution_queue`, this.memory);
 
-        this.base_room = new Base_room(this.memory, this);
+        this.room = new Room(this.memory, this);
 
-        this.base_jack = new Base_jack(this.memory, this);
+        this.jack = new Jack(this.memory, this);
 
-        this.base_spawn = new Base_spawn(this.memory, this);
-        this.spawn_queue = this.base_spawn.spawn_queue;
+        this.spawn = new Spawn(this.memory, this);
+        this.spawn_queue = this.spawn.spawn_queue;
 
-        this.base_spy = new Base_spy(this.memory, this);
-        this.mission_queue = this.base_spy.mission_queue;
+        this.spy = new Spy(this.memory, this);
+        this.mission_queue = this.spy.mission_queue;
 
         this.funeral = [];
 
@@ -36,10 +36,10 @@ class Kernel {
 
         _.forEach(this.entities, (entity) => entity.init());
 
-        this.base_room.init();
-        this.base_jack.init();
-        this.base_spawn.init();
-        this.base_spy.init();
+        this.room.init();
+        this.jack.init();
+        this.spawn.init();
+        this.spy.init();
     }
     run() {
         this.record_cpu_usage.tick();
@@ -50,9 +50,9 @@ class Kernel {
         this.execution_count = 0;
         this.efficiency = 0;
 
-        this.base_jack.run();
-        this.base_spawn.run();
-        this.base_spy.run();
+        this.jack.run();
+        this.spawn.run();
+        this.spy.run();
 
         for (
             let execution = this.execution_queue.top;
@@ -116,10 +116,10 @@ class Kernel {
 
         let entity = this.new_entity(creep);
         if (entity.role == `jack`) {
-            this.base_jack.add_creep(`jacks`, creep);
+            this.jack.add_creep(`jacks`, creep);
         }
         if (entity.role == `spy`) {
-            this.base_spy.add_creep(`spies`, creep);
+            this.spy.add_creep(`spies`, creep);
         }
 
         return entity;
@@ -131,12 +131,12 @@ class Kernel {
 
         let entity = this.new_entity(structure);
 
-        this.base_spawn.add_structure(`spawns`, structure);
+        this.spawn.add_structure(`spawns`, structure);
 
         return entity;
     }
     add_room(room) {
-        this.base_room.add_room(room);
+        this.room.add_room(room);
 
         let creeps = room.find(FIND_MY_CREEPS);
         _.forEach(creeps, (creep) => this.add_creep(creep));
@@ -148,7 +148,7 @@ class Kernel {
         this.mission_queue.push([Game.time, `spy`, [room_name]]);
     }
     ok() {
-        this.base_room.plan_room(this.base_room.core);
+        this.room.plan_room(this.room.core);
         this.system.graphic.shut();
     }
 }

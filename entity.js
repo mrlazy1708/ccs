@@ -211,7 +211,7 @@ class Entity {
         }
     }
     done_spawnCreep(_body, role, _name) {
-        this.kernel.base_spawn.memory.queued[role]--;
+        this.kernel.spawn.memory.queued[role]--;
         this.memory.done = false;
     }
     spy(room_name) {

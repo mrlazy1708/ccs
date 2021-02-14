@@ -1,6 +1,6 @@
 `use strict`;
 
-class Base_room extends Base {
+class Room extends Base {
     constructor(memory, kernel) {
         super(`room`, memory, kernel);
         this.memory.rooms = this.memory.rooms || [];
@@ -105,4 +105,4 @@ class Base_room extends Base {
     }
 }
 
-module.exports = Base_room;
+module.exports = Room;

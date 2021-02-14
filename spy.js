@@ -1,6 +1,6 @@
 `use strict`;
 
-class Base_spy extends Base {
+class Spy extends Base {
     constructor(memory, kernel) {
         super(`spy`, memory, kernel);
         this.memory.spies = this.memory.spies || [];
@@ -18,10 +18,10 @@ class Base_spy extends Base {
                 spy.entity.assign(mission[1], mission[2]);
             }
         });
-        if (this.mission_queue.size > this.kernel.base_spawn.queued(`spy`)) {
-            this.kernel.base_spawn.require(1, [MOVE], `spy`);
+        if (this.mission_queue.size > this.kernel.spawn.queued(`spy`)) {
+            this.kernel.spawn.require(1, [MOVE], `spy`);
         }
     }
 }
 
-module.exports = Base_spy;
+module.exports = Spy;

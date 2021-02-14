@@ -1,6 +1,6 @@
 `use strict`;
 
-class Base_jack extends Base {
+class Jack extends Base {
     constructor(memory, kernel) {
         super(`jack`, memory, kernel);
         this.memory.jacks = this.memory.jacks || [];
@@ -14,7 +14,7 @@ class Base_jack extends Base {
                 if (jack.store[RESOURCE_ENERGY] == 0) {
                     let source = jack.pos.findClosestByDistance(
                         _.filter(
-                            this.kernel.base_room.sources,
+                            this.kernel.room.sources,
                             (source) => source.entity.memory.potential > 0
                         )
                     );
@@ -25,7 +25,7 @@ class Base_jack extends Base {
                 } else {
                     let spawn = jack.pos.findClosestByDistance(
                         _.filter(
-                            this.kernel.base_spawn.spawns,
+                            this.kernel.spawn.spawns,
                             (spawn) =>
                                 spawn.store.getFreeCapacity(RESOURCE_ENERGY) >
                                 20
@@ -38,19 +38,19 @@ class Base_jack extends Base {
                         ]);
                     } else {
                         jack.entity.assign(`upgradeController`, [
-                            this.kernel.base_room.core.controller.id,
+                            this.kernel.room.core.controller.id,
                         ]);
                     }
                 }
             }
         });
         if (
-            this.memory.jacks.length + this.kernel.base_spawn.queued(`jack`) <
-            this.kernel.base_room.sources.length * 5
+            this.memory.jacks.length + this.kernel.spawn.queued(`jack`) <
+            this.kernel.room.sources.length * 5
         ) {
-            this.kernel.base_spawn.require(1, [WORK, CARRY, MOVE], `jack`);
+            this.kernel.spawn.require(1, [WORK, CARRY, MOVE], `jack`);
         }
     }
 }
 
-module.exports = Base_jack;
+module.exports = Jack;

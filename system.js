@@ -7,10 +7,10 @@ function import_module() {
     global.Graphic = require(`graphic`);
     global.Kernel = require(`kernel`);
     global.Base = require(`base`);
-    global.Base_room = require(`base_room`);
-    global.Base_jack = require(`base_jack`);
-    global.Base_spawn = require(`base_spawn`);
-    global.Base_spy = require(`base_spy`);
+    global.Room = require(`room`);
+    global.Jack = require(`jack`);
+    global.Spawn = require(`spawn`);
+    global.Spy = require(`spy`);
     global.Entity = require(`entity`);
 }
 
@@ -215,7 +215,7 @@ class System {
         Game[core.name] = kernel;
         kernel.init(this.memory.kernels);
         kernel.add_room(core);
-        kernel.base_room.set_core(core);
+        kernel.room.set_core(core);
     }
 }
 
