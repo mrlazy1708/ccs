@@ -1,5 +1,3 @@
-const Matrix = require("./matrix");
-
 `use strict`;
 
 class Base_room extends Base {
@@ -15,14 +13,68 @@ class Base_room extends Base {
     }
     plan_room(room) {
         let terrain = Matrix.from_terrain(room.getTerrain()),
+            square = terrain.to_square(),
+            cost = square.to_path_finder((v) =>
+                Math.min(Math.round(100 / v), 255)
+            ),
             pref = terrain
                 .to_path([room.controller])
                 .zip_with(terrain.to_path(room.find(FIND_MINERALS)), Matrix.max)
                 .zip_with(terrain.to_path(room.find(FIND_SOURCES)), Matrix.max)
                 .zip_with(terrain.to_path(room.find(FIND_EXIT)), Matrix.div)
-                .zip_with(terrain.to_square(), Matrix.div),
+                .zip_with(square, Matrix.div),
             center = pref.poi();
         center = new RoomPosition(center[0], center[1], room.name);
+
+        // Prim's Algorithm
+        let road = [],
+            closed = [],
+            opened = _.map(
+                _.concat(
+                    room.controller,
+                    room.find(FIND_SOURCES),
+                    room.find(FIND_MINERALS)
+                ),
+                (target) =>
+                    Object({
+                        id: target.id,
+                        pos: target.pos.getWorkSite(),
+                        range: 1,
+                    })
+            );
+        _.forEach(opened, (target) =>
+            cost.set(target.pos.x, target.pos.y, 255)
+        );
+        for (; opened.length != 0; ) {
+            let rst = _.reduce(
+                opened,
+                (rst, target) => {
+                    let find = PathFinder.search(
+                        target.pos,
+                        _.concat(closed, road)
+                    );
+                    if (find.incomplete) {
+                        return rst;
+                    } else if (rst) {
+                        if (find.path.length < rst.path.length) {
+                            return { id: target.id, path: find.path };
+                        } else {
+                            return rst;
+                        }
+                    } else {
+                        return { id: target.id, path: find.path };
+                    }
+                },
+                null
+            );
+            _.forEach(rst.path, (pos) => road.push({ pos: pos, range: 1 }));
+            _.remove(opened, (target) => {
+                if (target.id == rst.id) {
+                    closed.push(target);
+                    return true;
+                }
+            });
+        }
 
         this.system.graphic.erase(room.name);
         for (let y = 0; y < 50; y++) {

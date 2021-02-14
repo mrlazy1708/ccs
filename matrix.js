@@ -45,15 +45,14 @@ class Matrix {
     set(x, y, value) {
         this.data[y][x] = value;
     }
-    print() {
-        let log = ``;
+    to_path_finder() {
+        let ret = new this.to_path_finder.CostMatrix();
         for (let y = 0; y < 50; y++) {
             for (let x = 0; x < 50; x++) {
-                log += `${this.data[y][x]} `;
+                ret.set(x, y, this.data[y][x]);
             }
-            log += "\n";
         }
-        console.log(log);
+        return ret;
     }
     poi(predictor = Matrix.less) {
         let poi = [50, 50, null];

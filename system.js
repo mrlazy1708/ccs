@@ -86,6 +86,24 @@ function set_prototype() {
         this.memory[group].push([type, ...args]);
         this.memory[visual];
     };
+    RoomPosition.prototype.getWorkSite = function () {
+        let terrain = new Room.Terrain(this.roomName),
+            delta = _.reduce(
+                Directions,
+                (rst, delta) =>
+                    rst ||
+                    (terrain.get(this.x + delta[0], this.y + delta[1]) &
+                    TERRAIN_MASK_WALL
+                        ? null
+                        : delta),
+                null
+            );
+        return new RoomPosition(
+            this.x + delta[0],
+            this.x + delta[1],
+            this.roomName
+        );
+    };
     RoomPosition.prototype.getReachability = function () {
         let terrain = new Room.Terrain(this.roomName),
             x = this.x,
