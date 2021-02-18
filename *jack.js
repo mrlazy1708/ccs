@@ -1,6 +1,6 @@
 `use strict`;
 
-class Jack extends Base {
+class Jack extends Asterisk {
     constructor(memory, kernel) {
         super(`jack`, memory, kernel);
         this.memory.jacks = this.memory.jacks || [];

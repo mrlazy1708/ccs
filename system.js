@@ -1,19 +1,22 @@
 `use strict`;
 
 function import_module() {
-    global.Blackbox = require(`blackbox`);
-    global.Heap = require(`heap`);
-    global.Tree = require(`tree`);
-    global.Matrix = require(`matrix`);
-    global.Graphic = require(`graphic`);
+    global.Blackbox = require(`^blackbox`);
+    global.Graphic = require(`^graphic`);
+
+    global.Heap = require(`&heap`);
+    global.Matrix = require(`&matrix`);
+    global.Tree = require(`&tree`);
+
     global.Kernel = require(`kernel`);
-    global.Base = require(`base`);
-    global.Sector = require(`sector`);
-    global.Jack = require(`jack`);
-    global.Hatch = require(`hatch`);
-    global.Construct = require(`construct`);
-    global.Spy = require(`spy`);
     global.Entity = require(`entity`);
+
+    global.Asterisk = require(`*`);
+    global.Sector = require(`*sector`);
+    global.Jack = require(`*jack`);
+    global.Hatch = require(`*hatch`);
+    global.Construct = require(`*construct`);
+    global.Spy = require(`*spy`);
 }
 
 function define_constant() {

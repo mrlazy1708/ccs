@@ -20,7 +20,7 @@ function generate_name() {
     return name;
 }
 
-class Hatch extends Base {
+class Hatch extends Asterisk {
     constructor(memory, kernel) {
         super(`hatch`, memory, kernel);
         this.memory.spawns = this.memory.spawns || [];

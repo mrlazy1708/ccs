@@ -1,8 +1,8 @@
 `use strict`;
 
-class Base {
+class Asterisk {
     constructor(name, memory, kernel) {
-        this.memory = memory[`base_${name}`] = memory[`base_${name}`] || {};
+        this.memory = memory[`*${name}`] = memory[`*${name}`] || {};
         this.kernel = kernel;
         this.system = this.kernel.system;
     }
@@ -53,4 +53,4 @@ class Base {
     }
 }
 
-module.exports = Base;
+module.exports = Asterisk;

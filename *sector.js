@@ -1,6 +1,6 @@
 `use strict`;
 
-class Sector extends Base {
+class Sector extends Asterisk {
     constructor(memory, kernel) {
         super(`sector`, memory, kernel);
         this.memory.rooms = this.memory.rooms || [];

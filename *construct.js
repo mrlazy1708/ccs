@@ -1,6 +1,6 @@
 `use strict`;
 
-class Construct extends Base {
+class Construct extends Asterisk {
     constructor(memory, kernel) {
         super(`construct`, memory, kernel);
         this.memory.builders = this.memory.builders || [];

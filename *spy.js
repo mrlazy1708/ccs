@@ -1,6 +1,6 @@
 `use strict`;
 
-class Spy extends Base {
+class Spy extends Asterisk {
     constructor(memory, kernel) {
         super(`spy`, memory, kernel);
         this.memory.spies = this.memory.spies || [];
