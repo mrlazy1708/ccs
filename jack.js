@@ -14,7 +14,7 @@ class Jack extends Base {
                 if (jack.store[RESOURCE_ENERGY] == 0) {
                     let source = jack.pos.findClosestByDistance(
                         _.filter(
-                            this.kernel.room.sources,
+                            this.kernel.sector.sources,
                             (source) => source.entity.memory.potential > 0
                         )
                     );
@@ -25,7 +25,7 @@ class Jack extends Base {
                 } else {
                     let spawn = jack.pos.findClosestByDistance(
                         _.filter(
-                            this.kernel.spawn.spawns,
+                            this.kernel.hatch.spawns,
                             (spawn) =>
                                 spawn.store.getFreeCapacity(RESOURCE_ENERGY) >
                                 20
@@ -38,17 +38,17 @@ class Jack extends Base {
                         ]);
                     } else {
                         jack.entity.assign(`upgradeController`, [
-                            this.kernel.room.core.controller.id,
+                            this.kernel.sector.core.controller.id,
                         ]);
                     }
                 }
             }
         });
         if (
-            this.memory.jacks.length + this.kernel.spawn.queued(`jack`) <
-            this.kernel.room.sources.length * 5
+            this.memory.jacks.length + this.kernel.hatch.queued(`jack`) <
+            this.kernel.sector.sources.length * 5
         ) {
-            this.kernel.spawn.require(1, [WORK, CARRY, MOVE], `jack`);
+            this.kernel.hatch.require(1, [WORK, CARRY, MOVE], `jack`);
         }
     }
 }

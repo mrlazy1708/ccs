@@ -18,8 +18,8 @@ class Spy extends Base {
                 spy.entity.assign(mission[1], mission[2]);
             }
         });
-        if (this.mission_queue.size > this.kernel.spawn.queued(`spy`)) {
-            this.kernel.spawn.require(1, [MOVE], `spy`);
+        if (this.mission_queue.size > this.kernel.hatch.queued(`spy`)) {
+            this.kernel.hatch.require(1, [MOVE], `spy`);
         }
     }
 }

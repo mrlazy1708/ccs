@@ -20,9 +20,9 @@ function generate_name() {
     return name;
 }
 
-class Spawn extends Base {
+class Hatch extends Base {
     constructor(memory, kernel) {
-        super(`spawn`, memory, kernel);
+        super(`hatch`, memory, kernel);
         this.memory.spawns = this.memory.spawns || [];
 
         this.memory.queued = this.memory.queued || {};
@@ -51,4 +51,4 @@ class Spawn extends Base {
     }
 }
 
-module.exports = Spawn;
+module.exports = Hatch;

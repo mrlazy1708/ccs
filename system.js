@@ -3,13 +3,14 @@
 function import_module() {
     global.Blackbox = require(`blackbox`);
     global.Heap = require(`heap`);
+    global.Tree = require(`tree`);
     global.Matrix = require(`matrix`);
     global.Graphic = require(`graphic`);
     global.Kernel = require(`kernel`);
     global.Base = require(`base`);
-    global.Room = require(`room`);
+    global.Sector = require(`sector`);
     global.Jack = require(`jack`);
-    global.Spawn = require(`spawn`);
+    global.Hatch = require(`hatch`);
     global.Spy = require(`spy`);
     global.Entity = require(`entity`);
 }
@@ -100,7 +101,7 @@ function set_prototype() {
             );
         return new RoomPosition(
             this.x + delta[0],
-            this.x + delta[1],
+            this.y + delta[1],
             this.roomName
         );
     };
@@ -215,7 +216,7 @@ class System {
         Game[core.name] = kernel;
         kernel.init(this.memory.kernels);
         kernel.add_room(core);
-        kernel.room.set_core(core);
+        kernel.sector.set_core(core);
     }
 }
 

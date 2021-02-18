@@ -15,12 +15,12 @@ class Kernel {
 
         this.execution_queue = new Heap(`execution_queue`, this.memory);
 
-        this.room = new Room(this.memory, this);
+        this.sector = new Sector(this.memory, this);
 
         this.jack = new Jack(this.memory, this);
 
-        this.spawn = new Spawn(this.memory, this);
-        this.spawn_queue = this.spawn.spawn_queue;
+        this.hatch = new Hatch(this.memory, this);
+        this.spawn_queue = this.hatch.spawn_queue;
 
         this.spy = new Spy(this.memory, this);
         this.mission_queue = this.spy.mission_queue;
@@ -36,9 +36,9 @@ class Kernel {
 
         _.forEach(this.entities, (entity) => entity.init());
 
-        this.room.init();
+        this.sector.init();
         this.jack.init();
-        this.spawn.init();
+        this.hatch.init();
         this.spy.init();
     }
     run() {
@@ -51,7 +51,7 @@ class Kernel {
         this.efficiency = 0;
 
         this.jack.run();
-        this.spawn.run();
+        this.hatch.run();
         this.spy.run();
 
         for (
@@ -131,12 +131,12 @@ class Kernel {
 
         let entity = this.new_entity(structure);
 
-        this.spawn.add_structure(`spawns`, structure);
+        this.hatch.add_structure(`spawns`, structure);
 
         return entity;
     }
     add_room(room) {
-        this.room.add_room(room);
+        this.sector.add_room(room);
 
         let creeps = room.find(FIND_MY_CREEPS);
         _.forEach(creeps, (creep) => this.add_creep(creep));
@@ -148,7 +148,7 @@ class Kernel {
         this.mission_queue.push([Game.time, `spy`, [room_name]]);
     }
     ok() {
-        this.room.plan_room(this.room.core);
+        this.sector.plan_room(this.sector.core);
         this.system.graphic.shut();
     }
 }

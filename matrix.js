@@ -45,11 +45,11 @@ class Matrix {
     set(x, y, value) {
         this.data[y][x] = value;
     }
-    to_path_finder() {
-        let ret = new this.to_path_finder.CostMatrix();
+    to_path_finder(map) {
+        let ret = new PathFinder.CostMatrix();
         for (let y = 0; y < 50; y++) {
             for (let x = 0; x < 50; x++) {
-                ret.set(x, y, this.data[y][x]);
+                ret.set(x, y, map(this.data[y][x]));
             }
         }
         return ret;
@@ -58,15 +58,16 @@ class Matrix {
         let poi = [50, 50, null];
         for (let y = 0; y < 50; y++) {
             for (let x = 0; x < 50; x++) {
-                poi = predictor(poi[2], this.data[y][x])
-                    ? poi
-                    : [x, y, this.data[y][x]];
+                poi =
+                    predictor(this.data[y][x], poi[2]) || !poi[2]
+                        ? [x, y, this.data[y][x]]
+                        : poi;
             }
         }
         return poi;
     }
     zip_with(matrix, map = _.identity) {
-        // matrix.print();
+        // console.log(this.data);
         this.data = _.zipWith(this.data, matrix.data, (vector1, vector2) =>
             _.zipWith(vector1, vector2, map)
         );

@@ -1,8 +1,8 @@
 `use strict`;
 
-class Room extends Base {
+class Sector extends Base {
     constructor(memory, kernel) {
-        super(`room`, memory, kernel);
+        super(`sector`, memory, kernel);
         this.memory.rooms = this.memory.rooms || [];
         this.memory.sources = this.memory.sources || [];
     }
@@ -12,11 +12,11 @@ class Room extends Base {
         this.update(`sources`, Game.getObjectById, `remove_structure`);
     }
     plan_room(room) {
+        this.system.graphic.erase(room.name);
+
         let terrain = Matrix.from_terrain(room.getTerrain()),
             square = terrain.to_square(),
-            cost = square.to_path_finder((v) =>
-                Math.min(Math.round(100 / v), 255)
-            ),
+            cost = square.to_path_finder((v) => Math.min(10 / v, 255)),
             pref = terrain
                 .to_path([room.controller])
                 .zip_with(terrain.to_path(room.find(FIND_MINERALS)), Matrix.max)
@@ -30,11 +30,12 @@ class Room extends Base {
         let road = [],
             closed = [],
             opened = _.map(
-                _.concat(
+                _.flatten([
+                    { id: null, pos: center },
                     room.controller,
                     room.find(FIND_SOURCES),
-                    room.find(FIND_MINERALS)
-                ),
+                    room.find(FIND_MINERALS),
+                ]),
                 (target) =>
                     Object({
                         id: target.id,
@@ -51,7 +52,8 @@ class Room extends Base {
                 (rst, target) => {
                     let find = PathFinder.search(
                         target.pos,
-                        _.concat(closed, road)
+                        _.flatten(closed, road),
+                        { roomCallback: () => cost }
                     );
                     if (find.incomplete) {
                         return rst;
@@ -67,7 +69,19 @@ class Room extends Base {
                 },
                 null
             );
-            _.forEach(rst.path, (pos) => road.push({ pos: pos, range: 1 }));
+            _.forEach(rst.path, (pos) => {
+                this.system.graphic.draw(
+                    room.name,
+                    `road`,
+                    `circle`,
+                    pos.x,
+                    pos.y,
+                    {
+                        fill: `Red`,
+                    }
+                );
+                road.push({ pos: pos, range: 1 });
+            });
             _.remove(opened, (target) => {
                 if (target.id == rst.id) {
                     closed.push(target);
@@ -76,14 +90,17 @@ class Room extends Base {
             });
         }
 
-        this.system.graphic.erase(room.name);
+        let log = ``;
         for (let y = 0; y < 50; y++) {
             for (let x = 0; x < 50; x++) {
+                log += `${cost.get(x, y)} `;
                 this.system.graphic.draw(room.name, `plan`, `circle`, x, y, {
                     radius: 0.1 / pref.get(x, y),
                 });
             }
+            log += `\n`;
         }
+        // console.log(log);
     }
     add_room(room) {
         this.add(`rooms`, Game.getRoomByName, room.name);
@@ -105,4 +122,4 @@ class Room extends Base {
     }
 }
 
-module.exports = Room;
+module.exports = Sector;
