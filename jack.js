@@ -37,9 +37,16 @@ class Jack extends Base {
                             RESOURCE_ENERGY,
                         ]);
                     } else {
-                        jack.entity.assign(`upgradeController`, [
-                            this.kernel.sector.core.controller.id,
-                        ]);
+                        let site = jack.pos.findClosestByDistance(
+                            this.kernel.construct.sites
+                        );
+                        if (site) {
+                            jack.entity.assign(`build`, [site.id]);
+                        } else {
+                            jack.entity.assign(`upgradeController`, [
+                                this.kernel.sector.core.controller.id,
+                            ]);
+                        }
                     }
                 }
             }

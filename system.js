@@ -11,6 +11,7 @@ function import_module() {
     global.Sector = require(`sector`);
     global.Jack = require(`jack`);
     global.Hatch = require(`hatch`);
+    global.Construct = require(`construct`);
     global.Spy = require(`spy`);
     global.Entity = require(`entity`);
 }
@@ -26,6 +27,7 @@ function define_constant() {
         moveToRoom: [`🗺`, `🎯`],
         harvest: [`⛏`, `🈵`],
         transfer: [`🛢`, `🈳`],
+        build: [`🚧`, `🈳`],
         upgradeController: [`🔋`, `🈳`],
         spawnCreep: [],
         spy: [`👀`, `🎯`],

@@ -22,6 +22,8 @@ class Kernel {
         this.hatch = new Hatch(this.memory, this);
         this.spawn_queue = this.hatch.spawn_queue;
 
+        this.construct = new Construct(this.memory, this);
+
         this.spy = new Spy(this.memory, this);
         this.mission_queue = this.spy.mission_queue;
 
@@ -131,7 +133,13 @@ class Kernel {
 
         let entity = this.new_entity(structure);
 
-        this.hatch.add_structure(`spawns`, structure);
+        if (structure instanceof ConstructionSite) {
+            this.construct.add_structure(`sites`, structure);
+        } else {
+            if (structure.structureType == STRUCTURE_SPAWN) {
+                this.hatch.add_structure(`spawns`, structure);
+            }
+        }
 
         return entity;
     }
@@ -141,8 +149,11 @@ class Kernel {
         let creeps = room.find(FIND_MY_CREEPS);
         _.forEach(creeps, (creep) => this.add_creep(creep));
 
-        let spawns = room.find(FIND_MY_SPAWNS);
-        _.forEach(spawns, (spawn) => this.add_structure(spawn));
+        let structures = room.find(FIND_MY_STRUCTURES);
+        _.forEach(structures, (structure) => this.add_structure(structure));
+
+        let sites = room.find(FIND_MY_CONSTRUCTION_SITES);
+        _.forEach(sites, (site) => this.add_structure(site));
     }
     add_remote(room_name) {
         this.mission_queue.push([Game.time, `spy`, [room_name]]);

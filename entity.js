@@ -187,6 +187,14 @@ class Entity {
         }
         return ret == OK || ret == ERR_FULL;
     }
+    build(id) {
+        let target = Game.getObjectById(id),
+            ret = this.call(`build`, target);
+        if (ret == ERR_NOT_IN_RANGE) {
+            this.execute(`moveTo`, [id]);
+        }
+        return this.object.store[RESOURCE_ENERGY] == 0;
+    }
     upgradeController(id) {
         let target = Game.getObjectById(id),
             ret = this.call(`upgradeController`, target);
