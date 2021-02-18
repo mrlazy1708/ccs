@@ -8,7 +8,7 @@ class Spy extends Asterisk {
         this.mission_queue = new Heap(`mission_queue`, this.memory);
     }
     init() {
-        this.update(`spies`, Game.getCreepByName, `remove_creep`);
+        this.update(`spies`, Game.getObjectByName, `remove_name`);
     }
     run() {
         _.forEach(this.spies, (spy) => {

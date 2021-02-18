@@ -5,11 +5,13 @@ class Sector extends Asterisk {
         super(`sector`, memory, kernel);
         this.memory.rooms = this.memory.rooms || [];
         this.memory.sources = this.memory.sources || [];
+        this.memory.sites = this.memory.sites || [];
     }
     init() {
-        this.core = Game.getRoomByName(this.memory.core);
-        this.update(`rooms`, Game.getRoomByName, `remove_room`);
-        this.update(`sources`, Game.getObjectById, `remove_structure`);
+        this.core = Game.getObjectByName(this.memory.core);
+        this.update(`rooms`, Game.getObjectByName, `remove_room`);
+        this.update(`sources`, Game.getObjectById, `remove_id`);
+        this.update(`sites`, Game.getObjectById, `remove_id`);
     }
     plan_room(room) {
         this.system.graphic.erase(room.name);
@@ -103,22 +105,32 @@ class Sector extends Asterisk {
         // console.log(log);
     }
     add_room(room) {
-        this.add(`rooms`, Game.getRoomByName, room.name);
+        this.add_name(`rooms`, room);
 
         let sources = room.find(FIND_SOURCES);
         _.forEach(sources, (source) => {
-            let entity = this.kernel.new_entity(source);
+            let entity = this.kernel.get_entity(source);
             entity.memory.potential = source.pos.getReachability();
-            this.add(`sources`, Game.getObjectById, source.id);
+            this.add_id(`sources`, source);
         });
+
+        let sites = room.find(FIND_MY_CONSTRUCTION_SITES);
+        _.forEach(sites, (site) => this.add_id(`sites`, site));
+    }
+    remove_room(room_name) {
+        let derive = (id) => {
+            let object = Game.getObjectById(id); //monad
+            if (object && object.room && object.room.name != room_name) {
+                return object;
+            }
+        };
+        this.remove_name(`rooms`, room_name);
+        this.update(`sources`, derive, `remove_id`);
+        this.update(`sites`, derive, `remove_id`);
     }
     set_core(core) {
         this.memory.core = core.name;
         this.core = core;
-    }
-    remove_room(room_name) {
-        this.remove(`rooms`, Game.getRoomByName, room_name);
-        this.update(`sources`, Game.getObjectByName, this.remove_structure);
     }
 }
 

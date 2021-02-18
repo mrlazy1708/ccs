@@ -29,7 +29,7 @@ class Hatch extends Asterisk {
         this.spawn_queue = new Heap(`spawn_queue`, this.memory);
     }
     init() {
-        this.update(`spawns`, Game.getObjectById, `remove_structure`);
+        this.update(`spawns`, Game.getObjectByName, `remove_name`);
     }
     run() {
         _.forEach(this.spawns, (spawn) => {

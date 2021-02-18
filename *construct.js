@@ -5,15 +5,14 @@ class Construct extends Asterisk {
         super(`construct`, memory, kernel);
         this.memory.builders = this.memory.builders || [];
         this.memory.sites = this.memory.sites || [];
+
+        this.blueprint = this.memory.blueprint;
     }
     init() {
-        this.update(`builders`, Game.getObjectById, `remove_structure`);
-        this.update(`sites`, Game.getObjectById, `remove_structure`);
+        this.update(`builders`, Game.getObjectById, `remove_id`);
+        this.update(`sites`, Game.getObjectById, `remove_id`);
     }
     run() {}
-    require(constructionSite) {
-        this.add_structure(`sites`, constructionSite);
-    }
 }
 
 module.exports = Construct;

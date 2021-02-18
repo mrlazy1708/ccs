@@ -41,6 +41,7 @@ class Kernel {
         this.sector.init();
         this.jack.init();
         this.hatch.init();
+        this.construct.init();
         this.spy.init();
     }
     run() {
@@ -54,6 +55,7 @@ class Kernel {
 
         this.jack.run();
         this.hatch.run();
+        this.construct.run();
         this.spy.run();
 
         for (
@@ -98,52 +100,53 @@ class Kernel {
         report += `      Efficiency: ${this.efficiency}\n\n`;
         return report;
     }
-    new_entity(object) {
-        let entity = (this.entities[object.id] = new Entity(
-            object.id,
+    get_entity(object) {
+        if (this.entities[object.name || object.id]) {
+            return this.entities[object.name || object.id];
+        }
+
+        let entity = (this.entities[object.name || object.id] = new Entity(
+            object.name || object.id,
             this.memory.entities,
             this
         ));
         entity.init(this.memory.entities);
         return entity;
     }
-    remove_entity(id) {
-        delete this.memory.entities[id];
-        delete this.entities[id];
+    remove_entity(key) {
+        delete this.memory.entities[key];
+        delete this.entities[key];
     }
     add_creep(creep) {
-        if (this.entities[creep.id]) {
-            return this.entities[creep.id];
-        }
-
-        let entity = this.new_entity(creep);
+        let entity = this.get_entity(creep);
         if (entity.role == `jack`) {
-            this.jack.add_creep(`jacks`, creep);
+            this.jack.add_name(`jacks`, creep);
+        }
+        if (entity.role == `builder`) {
+            this.construct.add_name(`builders`, creep);
         }
         if (entity.role == `spy`) {
-            this.spy.add_creep(`spies`, creep);
+            this.spy.add_name(`spies`, creep);
         }
 
         return entity;
     }
     add_structure(structure) {
-        if (this.entities[structure.id]) {
-            return this.entities[structure.id];
-        }
-
-        let entity = this.new_entity(structure);
+        let entity = this.get_entity(structure);
 
         if (structure instanceof ConstructionSite) {
-            this.construct.add_structure(`sites`, structure);
+            this.construct.add_id(`sites`, structure);
         } else {
             if (structure.structureType == STRUCTURE_SPAWN) {
-                this.hatch.add_structure(`spawns`, structure);
+                this.hatch.add_name(`spawns`, structure);
             }
         }
 
         return entity;
     }
     add_room(room) {
+        let entity = this.get_entity(room);
+
         this.sector.add_room(room);
 
         let creeps = room.find(FIND_MY_CREEPS);
@@ -154,6 +157,8 @@ class Kernel {
 
         let sites = room.find(FIND_MY_CONSTRUCTION_SITES);
         _.forEach(sites, (site) => this.add_structure(site));
+
+        return entity;
     }
     add_remote(room_name) {
         this.mission_queue.push([Game.time, `spy`, [room_name]]);

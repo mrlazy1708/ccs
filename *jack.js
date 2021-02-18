@@ -6,7 +6,7 @@ class Jack extends Asterisk {
         this.memory.jacks = this.memory.jacks || [];
     }
     init() {
-        this.update(`jacks`, Game.getCreepByName, `remove_creep`);
+        this.update(`jacks`, Game.getObjectByName, `remove_name`);
     }
     run() {
         _.forEach(this.jacks, (jack) => {
@@ -38,7 +38,7 @@ class Jack extends Asterisk {
                         ]);
                     } else {
                         let site = jack.pos.findClosestByDistance(
-                            this.kernel.construct.sites
+                            this.kernel.sector.sites
                         );
                         if (site) {
                             jack.entity.assign(`build`, [site.id]);

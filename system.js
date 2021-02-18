@@ -173,9 +173,11 @@ class System {
         this.cpu_usage = Game.cpu.getUsed();
         this.log = `System ${this.name} run at ${Game.time}:\n`;
 
-        Game.getCreepByName = (name) => Game.creeps[name];
-        Game.getRoomByName = (name) => Game.rooms[name];
-        Game.getVisualByName = (name) => new RoomVisual(name);
+        Game.getObjectByName = (name) =>
+            Game.creeps[name] ||
+            Game.rooms[name] ||
+            Game.spawns[name] ||
+            Game.flags[name];
         Game.system = this;
         _.forEach(this.kernels, (kernel, name) => (Game[name] = kernel));
 
@@ -219,7 +221,7 @@ class System {
             this
         ));
         Game[core.name] = kernel;
-        kernel.init(this.memory.kernels);
+        kernel.init();
         kernel.add_room(core);
         kernel.sector.set_core(core);
     }

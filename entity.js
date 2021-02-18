@@ -1,9 +1,9 @@
 `use strict`;
 
 class Entity {
-    constructor(id, memory, kernel) {
-        this.id = id;
-        this.memory = memory[this.id] = memory[this.id] || {};
+    constructor(key, memory, kernel) {
+        this.key = key;
+        this.memory = memory[this.key] = memory[this.key] || {};
         this.kernel = kernel;
 
         this.execution_queue = this.memory.execution_queue =
@@ -12,7 +12,7 @@ class Entity {
         this.type = this.executing[0] || `idle`;
         this.data = this.executing[1] || [];
 
-        this.lable = (Game.getObjectById(this.id) || {}).name || this.id;
+        this.lable = this.key;
         this.face = this.lable.split(` `);
         if (this.face.length > 2) {
             this.lable = this.lable.padEnd(
@@ -38,14 +38,15 @@ class Entity {
         this.log = `${this.lable}`;
         this.saying = undefined;
 
-        this.object = Game.getObjectById(this.id);
+        this.object =
+            Game.getObjectById(this.key) || Game.getObjectByName(this.key);
         if (this.object) {
             this.object.entity = this;
         } else {
             while (this.execution_queue.length > 0) {
                 this.shift();
             }
-            this.kernel.remove_entity(this.id);
+            this.kernel.remove_entity(this.key);
         }
     }
     push(type, data) {
@@ -63,7 +64,7 @@ class Entity {
     }
     assign(type, data) {
         if (this.type == `idle`) {
-            this.kernel.execution_queue.push([Game.time, this.id]);
+            this.kernel.execution_queue.push([Game.time, this.key]);
         }
         this.push(type, data);
     }
