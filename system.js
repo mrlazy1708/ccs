@@ -9,22 +9,28 @@ function import_module() {
     global.Tree = require(`&tree`);
 
     global.Kernel = require(`kernel`);
-    global.Entity = require(`entity`);
 
     global.Asterisk = require(`*`);
     global.Sector = require(`*sector`);
     global.Jack = require(`*jack`);
     global.Hatch = require(`*hatch`);
     global.Construct = require(`*construct`);
+    global.Traffic = require(`*traffic`);
     global.Spy = require(`*spy`);
+
+    global.Hash = require(`#`);
+    global.Creeps = require(`#creeps`);
+    global.Structures = require(`#structures`);
+    global.Rooms = require(`#rooms`);
 }
 
 function define_constant() {
+    global.HashTypes = [`Creeps`, `Structures`, `Rooms`];
     global.LableLength = 25;
     global.LeadingSpaces = ` `.repeat(LableLength);
     // prettier-ignore
     global.MeaningOf = [`OK`,`ERR_NOT_OWNER`,`ERR_NO_PATH`,`ERR_NAME_EXISTS`,`ERR_BUSY`,`ERR_NOT_FOUND`,`ERR_NOT_ENOUGH_RESOURCES`,`ERR_INVALID_TARGET`,`ERR_FULL`,`ERR_NOT_IN_RANGE`,`ERR_INVALID_ARGS`,`ERR_TIRED`,`ERR_NO_BODYPART`,`ERR_NOT_ENOUGH_EXTENSIONS`,`ERR_RCL_NOT_ENOUGH`,`ERR_GCL_NOT_ENOUGH`,];
-    global.Dictionary = {
+    global.Sayings = {
         idle: [`🥱`, `🥱`],
         moveTo: [`🚗`, `🎯`],
         moveToRoom: [`🗺`, `🎯`],
@@ -32,8 +38,11 @@ function define_constant() {
         transfer: [`🛢`, `🈳`],
         build: [`🚧`, `🈳`],
         upgradeController: [`🔋`, `🈳`],
-        spawnCreep: [],
         spy: [`👀`, `🎯`],
+    };
+    global.Icons = {
+        room: `🏡`,
+        [STRUCTURE_SPAWN]: `🕸`,
     };
     // prettier-ignore
     global.Faces = {
@@ -86,12 +95,6 @@ function define_constant() {
 }
 
 function set_prototype() {
-    Spawn.prototype.say = () => {};
-    Room.prototype.draw = function (group, type, ...args) {
-        this.memory[group] = this.memory[group] || [];
-        this.memory[group].push([type, ...args]);
-        this.memory[visual];
-    };
     RoomPosition.prototype.getWorkSite = function () {
         let terrain = new Room.Terrain(this.roomName),
             delta = _.reduce(
@@ -150,6 +153,17 @@ function set_prototype() {
     };
 }
 
+function init_game_object() {
+    Game.getObjectByName = (name) =>
+        Game.creeps[name] ||
+        Game.rooms[name] ||
+        Game.spawns[name] ||
+        Game.flags[name];
+    Game.getObject = (key) =>
+        Game.getObjectById(key) || Game.getObjectByName(key);
+    Game.system = this;
+}
+
 class System {
     constructor(name) {
         this.name = name;
@@ -158,6 +172,7 @@ class System {
         import_module();
         define_constant();
         set_prototype();
+        init_game_object();
 
         this.graphic = new Graphic(this.memory, this);
 
@@ -173,12 +188,8 @@ class System {
         this.cpu_usage = Game.cpu.getUsed();
         this.log = `System ${this.name} run at ${Game.time}:\n`;
 
-        Game.getObjectByName = (name) =>
-            Game.creeps[name] ||
-            Game.rooms[name] ||
-            Game.spawns[name] ||
-            Game.flags[name];
-        Game.system = this;
+        init_game_object();
+
         _.forEach(this.kernels, (kernel, name) => (Game[name] = kernel));
 
         this.graphic.init();

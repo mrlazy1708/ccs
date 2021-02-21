@@ -10,17 +10,17 @@ class Jack extends Asterisk {
     }
     run() {
         _.forEach(this.jacks, (jack) => {
-            if (jack.entity.type == `idle`) {
+            if (jack.hash.state == `idle`) {
                 if (jack.store[RESOURCE_ENERGY] == 0) {
                     let source = jack.pos.findClosestByDistance(
                         _.filter(
                             this.kernel.sector.sources,
-                            (source) => source.entity.memory.potential > 0
+                            (source) => source.hash.memory.potential > 0
                         )
                     );
                     if (source) {
-                        jack.entity.assign(`harvest`, [source.id, 1]);
-                        source.entity.memory.potential--;
+                        jack.hash.assign(`harvest`, [source.id, 1]);
+                        source.hash.memory.potential--;
                     }
                 } else {
                     let spawn = jack.pos.findClosestByDistance(
@@ -32,7 +32,7 @@ class Jack extends Asterisk {
                         )
                     );
                     if (spawn) {
-                        jack.entity.assign(`transfer`, [
+                        jack.hash.assign(`transfer`, [
                             spawn.id,
                             RESOURCE_ENERGY,
                         ]);
@@ -41,9 +41,9 @@ class Jack extends Asterisk {
                             this.kernel.sector.sites
                         );
                         if (site) {
-                            jack.entity.assign(`build`, [site.id]);
+                            jack.hash.assign(`build`, [site.id]);
                         } else {
-                            jack.entity.assign(`upgradeController`, [
+                            jack.hash.assign(`upgradeController`, [
                                 this.kernel.sector.core.controller.id,
                             ]);
                         }

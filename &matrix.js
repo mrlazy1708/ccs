@@ -1,17 +1,15 @@
 `use strict`;
 
 class Matrix {
-    constructor(init = 0) {
-        if (init != null) {
+    constructor(init) {
+        if (init != `🈳`) {
             this.data = Array.from({ length: 50 }, (_) =>
                 Array.from({ length: 50 }, (_) => init)
             );
-        } else {
-            this.data = [];
         }
     }
     static from_terrain(terrain) {
-        let ret = new Matrix(null);
+        let ret = new Matrix(`🈳`);
         ret.data = _.chunk(
             _.map(terrain.getRawBuffer(), (value) =>
                 value & TERRAIN_MASK_WALL
@@ -54,7 +52,7 @@ class Matrix {
         }
         return ret;
     }
-    poi(predictor = Matrix.less) {
+    poi(predictor) {
         let poi = [50, 50, null];
         for (let y = 0; y < 50; y++) {
             for (let x = 0; x < 50; x++) {
@@ -64,9 +62,9 @@ class Matrix {
                         : poi;
             }
         }
-        return poi;
+        return [poi[0], poi[1]];
     }
-    zip_with(matrix, map = _.identity) {
+    zip_with(matrix, map) {
         // console.log(this.data);
         this.data = _.zipWith(this.data, matrix.data, (vector1, vector2) =>
             _.zipWith(vector1, vector2, map)
@@ -106,16 +104,16 @@ class Matrix {
         }
         return ret;
     }
-    to_max_square(direction) {
+    to_max_square(direction, predictor) {
         // prettier-ignore
         let up = [0, 1],
             down = [49, -1],
             info = direction == TOP_LEFT ? [up, up] : direction == TOP_RIGHT ? [down, up] : direction == BOTTOM_RIGHT ? [down, down] : [up, down],
-            ret = new Matrix(),
+            ret = new Matrix(0),
             data = ret.data;
         for (let y = info[1][0]; Check(y); y += info[1][1]) {
             for (let x = info[0][0]; Check(x); x += info[0][1]) {
-                if (this.data[y][x] == `wall`) {
+                if (predictor(this.data[y][x])) {
                     data[y][x] = 0;
                 } else if (x == info[0][0] || y == info[1][0]) {
                     data[y][x] = 1;
@@ -129,17 +127,17 @@ class Matrix {
         }
         return ret;
     }
-    to_square() {
+    to_square(predictor) {
         let ret = new Matrix(Infinity);
-        ret.zip_with(this.to_max_square(TOP_LEFT), Matrix.min)
-            .zip_with(this.to_max_square(TOP_RIGHT), Matrix.min)
-            .zip_with(this.to_max_square(BOTTOM_RIGHT), Matrix.min)
-            .zip_with(this.to_max_square(BOTTOM_LEFT), Matrix.min);
+        ret.zip_with(this.to_max_square(TOP_LEFT, predictor), Matrix.min)
+            .zip_with(this.to_max_square(TOP_RIGHT, predictor), Matrix.min)
+            .zip_with(this.to_max_square(BOTTOM_RIGHT, predictor), Matrix.min)
+            .zip_with(this.to_max_square(BOTTOM_LEFT, predictor), Matrix.min);
         return ret;
     }
     to_space() {
         let dp = max_square(terrain, TOP_LEFT),
-            ret = new Matrix(),
+            ret = new Matrix(0),
             data = ret.data;
         for (let y = 0; y < 50; y++) {
             let queue = [];
@@ -162,6 +160,16 @@ class Matrix {
             }
         }
         return ret;
+    }
+    print() {
+        let log = ``;
+        for (let y = 0; y < 50; y++) {
+            for (let x = 0; x < 50; x++) {
+                log += `${this.data[y][x]} `;
+            }
+            log += `\n`;
+        }
+        console.log(log);
     }
 }
 

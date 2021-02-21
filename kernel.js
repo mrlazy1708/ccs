@@ -6,28 +6,26 @@ class Kernel {
         this.memory = memory[this.name] = memory[this.name] || {};
         this.system = system;
 
-        this.memory.entities = this.memory.entities =
-            this.memory.entities || {};
-        this.entities = _.mapValues(
-            this.memory.entities,
-            (_, id, memory) => new Entity(id, memory, this)
-        );
+        this.queue = new Heap(`queue`, this.memory);
 
-        this.execution_queue = new Heap(`execution_queue`, this.memory);
+        _.forEach(
+            HashTypes,
+            (type) =>
+                (this[type] = _.mapValues(
+                    (this.memory[type] = this.memory[type] || {}),
+                    (_, name, memory) => new global[type](name, memory, this)
+                ))
+        );
 
         this.sector = new Sector(this.memory, this);
 
         this.jack = new Jack(this.memory, this);
 
         this.hatch = new Hatch(this.memory, this);
-        this.spawn_queue = this.hatch.spawn_queue;
 
         this.construct = new Construct(this.memory, this);
 
         this.spy = new Spy(this.memory, this);
-        this.mission_queue = this.spy.mission_queue;
-
-        this.funeral = [];
 
         this.record_cpu_usage = new Blackbox(`record_cpu_usage`, this.memory);
         this.record_execution = new Blackbox(`record_execution`, this.memory);
@@ -36,7 +34,9 @@ class Kernel {
     init() {
         this.log = `\nKernel ${this.name} :\n\n`;
 
-        _.forEach(this.entities, (entity) => entity.init());
+        _.forEach(HashTypes, (type) =>
+            _.forEach(this[type], (hash) => hash.init())
+        );
 
         this.sector.init();
         this.jack.init();
@@ -59,18 +59,16 @@ class Kernel {
         this.spy.run();
 
         for (
-            let execution = this.execution_queue.top;
-            execution && execution[0] < Game.time && Game.cpu.getUsed() < 5;
-            execution = this.execution_queue.top
+            let top = this.queue.top;
+            top && top[0] < Game.time && Game.cpu.getUsed() < 5;
+            top = this.queue.top
         ) {
-            this.execution_queue.pop();
-            let entity = this.entities[execution[1]];
-            if (entity) {
+            this.queue.pop();
+            let hash = this.find_hash(top[1]);
+            if (hash) {
                 this.execution_count++;
-                // let a = Game.cpu.getUsed();
-                if (entity.run()) {
-                    // console.log(Game.cpu.getUsed() - a);
-                    this.execution_queue.push([Game.time, execution[1]]);
+                if (hash.run()) {
+                    this.queue.push([Game.time, top[1]]);
                 }
             }
         }
@@ -84,13 +82,6 @@ class Kernel {
         );
     }
     shut() {
-        for (
-            let affair = this.funeral.pop();
-            affair;
-            affair = this.funeral.pop()
-        ) {
-            affair();
-        }
         this.system.log += this.log;
     }
     get report() {
@@ -100,39 +91,45 @@ class Kernel {
         report += `      Efficiency: ${this.efficiency}\n\n`;
         return report;
     }
-    get_entity(object) {
-        if (this.entities[object.name || object.id]) {
-            return this.entities[object.name || object.id];
-        }
-
-        let entity = (this.entities[object.name || object.id] = new Entity(
-            object.name || object.id,
-            this.memory.entities,
-            this
-        ));
-        entity.init(this.memory.entities);
-        return entity;
+    find_hash(key) {
+        return _.reduce(
+            HashTypes,
+            (hash, type) => (hash ? hash : this[type][key]),
+            undefined
+        );
     }
-    remove_entity(key) {
-        delete this.memory.entities[key];
-        delete this.entities[key];
+    get_hash(type, object) {
+        let key = object.name || object.id;
+        if (this[type][key]) return this[type][key];
+
+        let hash = new global[type](key, this.memory[type], this);
+        this[type][key] = hash;
+        hash.init();
+        return hash;
+    }
+    remove_hash(key) {
+        _.forEach(HashTypes, (type) => {
+            delete this.memory[type][key];
+            delete this[type][key];
+        });
     }
     add_creep(creep) {
-        let entity = this.get_entity(creep);
-        if (entity.role == `jack`) {
+        let hash = this.get_hash(`Creeps`, creep);
+
+        if (creep.memory.role == `jack`) {
             this.jack.add_name(`jacks`, creep);
         }
-        if (entity.role == `builder`) {
+        if (creep.memory.role == `builder`) {
             this.construct.add_name(`builders`, creep);
         }
-        if (entity.role == `spy`) {
+        if (creep.memory.role == `spy`) {
             this.spy.add_name(`spies`, creep);
         }
 
-        return entity;
+        return hash;
     }
     add_structure(structure) {
-        let entity = this.get_entity(structure);
+        let hash = this.get_hash(`Structures`, structure);
 
         if (structure instanceof ConstructionSite) {
             this.construct.add_id(`sites`, structure);
@@ -142,10 +139,10 @@ class Kernel {
             }
         }
 
-        return entity;
+        return hash;
     }
     add_room(room) {
-        let entity = this.get_entity(room);
+        let hash = this.get_hash(`Rooms`, room);
 
         this.sector.add_room(room);
 
@@ -158,10 +155,10 @@ class Kernel {
         let sites = room.find(FIND_MY_CONSTRUCTION_SITES);
         _.forEach(sites, (site) => this.add_structure(site));
 
-        return entity;
+        return hash;
     }
     add_remote(room_name) {
-        this.mission_queue.push([Game.time, `spy`, [room_name]]);
+        this.spy.queue.push([Game.time, `spy`, [room_name]]);
     }
     ok() {
         this.sector.plan_room(this.sector.core);

@@ -26,25 +26,25 @@ class Hatch extends Asterisk {
         this.memory.spawns = this.memory.spawns || [];
 
         this.memory.queued = this.memory.queued || {};
-        this.spawn_queue = new Heap(`spawn_queue`, this.memory);
+        this.queue = new Heap(`queue`, this.memory);
     }
     init() {
         this.update(`spawns`, Game.getObjectByName, `remove_name`);
     }
     run() {
         _.forEach(this.spawns, (spawn) => {
-            let config = this.spawn_queue.top;
-            if (config && spawn.entity.type == `idle`) {
-                this.spawn_queue.pop();
+            let config = this.queue.top;
+            if (config && spawn.hash.state == `idle`) {
+                this.queue.pop();
                 config.shift();
                 config[2] = config[2] || generate_name();
-                spawn.entity.assign(`spawnCreep`, config);
+                spawn.hash.assign(`spawnCreep`, config);
             }
         });
     }
     require(rank, body, role) {
         this.memory.queued[role] = this.queued(role) + 1;
-        this.spawn_queue.push([Game.time + rank * 16, body, role]);
+        this.queue.push([Game.time + rank * 16, body, role]);
     }
     queued(role) {
         return this.memory.queued[role] || 0;

@@ -5,20 +5,20 @@ class Spy extends Asterisk {
         super(`spy`, memory, kernel);
         this.memory.spies = this.memory.spies || [];
 
-        this.mission_queue = new Heap(`mission_queue`, this.memory);
+        this.queue = new Heap(`queue`, this.memory);
     }
     init() {
         this.update(`spies`, Game.getObjectByName, `remove_name`);
     }
     run() {
         _.forEach(this.spies, (spy) => {
-            let mission = this.mission_queue.top;
-            if (mission && spy.entity.type == `idle`) {
-                this.mission_queue.pop();
-                spy.entity.assign(mission[1], mission[2]);
+            let mission = this.queue.top;
+            if (mission && spy.hash.type == `idle`) {
+                this.queue.pop();
+                spy.hash.assign(mission[1], mission[2]);
             }
         });
-        if (this.mission_queue.size > this.kernel.hatch.queued(`spy`)) {
+        if (this.queue.size > this.kernel.hatch.queued(`spy`)) {
             this.kernel.hatch.require(1, [MOVE], `spy`);
         }
     }

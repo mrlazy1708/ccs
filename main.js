@@ -18,9 +18,9 @@ module.exports.loop = function () {
         });
     };
     // try {
-        system.init();
-        system.run();
-        system.shut();
+    system.init();
+    system.run();
+    system.shut();
     // } catch (err) {
     //     console.log(err);
     //     Game.reset();

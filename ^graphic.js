@@ -25,11 +25,12 @@ class Grapihc {
     erase(room_name, group) {
         if (room_name) {
             let visual = new RoomVisual(room_name);
-            if (group) {
+            if (group && this.memory[room_name]) {
                 delete this.memory[room_name][group];
-                _.forEach(this.memory[room_name], ([type, args]) =>
-                    visual[type](...args)
-                );
+                _.forEach(this.memory[room_name], ([type, args]) => {
+                    console.log(type);
+                    visual[type](...args);
+                });
             } else {
                 delete this.memory[room_name];
                 visual.clear();
