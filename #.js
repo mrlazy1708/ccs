@@ -27,7 +27,7 @@ class Hash {
         this.state = type;
         this.data = data;
         this.current = [type, data];
-        this.queue.push(this.current);
+        this.queue.unshift(this.current);
     }
     run() {
         return this.run_default();
@@ -54,7 +54,7 @@ class Hash {
         } else {
             ret = this.default(...data);
         }
-        this.saying = this.saying || (Sayings[type] || [])[ret ? 1 : 0];
+        this.saying = this.saying || (SayingOf[type] || [])[ret ? 1 : 0];
         return ret;
     }
     kill() {

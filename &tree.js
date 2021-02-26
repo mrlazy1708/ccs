@@ -17,6 +17,21 @@ class Node {
                 ))
         );
     }
+    get x() {
+        return this.memory.x;
+    }
+    get y() {
+        return this.memory.y;
+    }
+    get d() {
+        return this.memory.d;
+    }
+    get binds() {
+        return (this.memory.binds = this.memory.binds || {});
+    }
+    pos(room_name) {
+        return new RoomPosition(this.x, this.y, room_name);
+    }
     grow() {
         this.tree.memory.push({ father: this.index });
         let node = new Node(
@@ -32,6 +47,10 @@ class Node {
     dfs(apply) {
         let result = _.map(this.children, (child) => child.dfs(apply));
         return apply(this, result);
+    }
+    to_root(route = []) {
+        route.push(this);
+        return this.father ? this.father.to_root(route) : route;
     }
     print(log, depth) {
         return _.reduce(
@@ -50,7 +69,10 @@ class Tree {
         this.memory = memory[name] = memory[name] || [];
 
         this.nodes = [];
-        this.nodes[0] = this.root = new Node(0, this.memory, this);
+        this.nodes[0] = this.root = new Tree.Node(0, this.memory, this);
+    }
+    static get Node() {
+        return Node;
     }
     dfs(apply) {
         return this.root.dfs(apply);

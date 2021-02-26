@@ -4,7 +4,7 @@ class Structure extends Hash {
     constructor(id, memory, kernel) {
         super(id, memory, kernel);
 
-        this.face = Icons[Game.getObject(this.key).structureType];
+        this.face = IconOf[Game.getObject(this.key).structureType];
         this.lable = `${this.face} ${this.key.padEnd(LableLength - 3)}`;
     }
     init() {

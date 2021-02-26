@@ -4,16 +4,21 @@ class Creeps extends Hash {
     constructor(name, memory, kernel) {
         super(name, memory, kernel);
 
-        this.lable = this.key;
-        this.face = this.lable.split(` `);
-        this.lable = this.lable.padEnd(
-            this.lable.length -
-                this.face[1].length -
-                this.face[2].length +
-                LableLength -
-                4
-        );
-        this.face = this.face[0];
+        try {
+            this.lable = this.key;
+            this.face = this.lable.split(` `);
+            this.lable = this.lable.padEnd(
+                this.lable.length -
+                    this.face[1].length -
+                    this.face[2].length +
+                    LableLength -
+                    4
+            );
+            this.face = this.face[0];
+        } catch (err) {
+            this.face = IconOf.creep;
+            this.lable = `${this.face} ${this.key.padEnd(LableLength - 3)}`;
+        }
     }
     init() {
         this.object = Game.creeps[this.key];
@@ -31,10 +36,82 @@ class Creeps extends Hash {
         return ret;
     }
 
-    moveTo(id, opts) {
-        let target = Game.getObjectById(id);
-        this.call(`moveTo`, target, opts);
-        return this.object.pos.getRangeTo(target.pos) == 0;
+    move(direction) {
+        this.call(`move`, direction);
+        return true;
+    }
+
+    moveTo(target_id, _opts) {
+        let hash = this.object.room.hash;
+        if (hash.check(`table`)) {
+            let target_index = hash.table[target_id];
+            if (target_index) {
+                this.result(`OK`);
+                return this.run_one(`moveToNode`, [target_index]);
+            } else {
+                this.result(`ERR_UNKNOWN_TARGET`);
+            }
+        }
+        // let target = Game.getObjectById(id);
+        // this.call(`moveTo`, target, opts);
+        // return this.object.pos.getRangeTo(target.pos) == 0;
+    }
+
+    moveToPos(pos, range) {
+        this.call(`moveTo`, pos);
+        return this.object.pos.getRangeTo(pos) <= range;
+    }
+
+    moveToNode(target_index) {
+        let hash = this.object.room.hash;
+        if (hash.check(`road_map`) && hash.check(`road_tree`)) {
+            let node = hash.road_map.get(this.object.pos.x, this.object.pos.y);
+            if (!node) {
+                this.result(`OFF_ROAD`);
+                if (!this.memory.shore) {
+                    if (hash.check(`road`)) {
+                        let road_pos = this.object.pos.findClosestByRange(
+                            hash.road
+                        );
+                        this.memory.shore = [road_pos.x, road_pos.y];
+                    } else {
+                        return false;
+                    }
+                }
+                if (hash.check(`road_map`)) {
+                    this.run_one(`moveToPos`, [
+                        hash.road_map.get(...this.memory.shore).pos(hash.key),
+                        0,
+                    ]);
+                }
+                return false;
+            } else {
+                delete this.memory.shore;
+            }
+            if (node && node.index == target_index) {
+                this.result(`ARRIVEED`);
+                return true;
+            }
+            this.result(`AT_${node.index}`);
+            let next = node.children[0];
+            if (node.index == 0 || node.children.length != 1) {
+                let route = node.tree.nodes[target_index].to_root();
+                for (; route.length > 0 && route.pop().index != node.index; );
+                if (route.length > 0) {
+                    this.memory.down = true;
+                    next = route[route.length - 1];
+                } else {
+                    this.memory.down = false;
+                }
+            }
+            if (this.memory.down) {
+                this.run_one(`move`, [OppositeOf[next.d]]);
+            } else {
+                this.run_one(`move`, [node.d]);
+            }
+        } else {
+            this.result(`OFF_ROAD`);
+        }
     }
 
     moveToRoom(room_name) {
