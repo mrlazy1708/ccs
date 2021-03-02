@@ -33,11 +33,31 @@ class Matrix {
     static get greater() {
         return (u, v) => u > v;
     }
-    get(x, y) {
+    get_xy(x, y) {
         return (this.data[y] || [])[x];
     }
-    set(x, y, value) {
+    get_pos(pos) {
+        return this.get_xy(pos.x, pos.y);
+    }
+    get(arg1, arg2) {
+        if (arg1 instanceof RoomPosition) {
+            return this.get_pos(arg1);
+        } else {
+            return this.get_xy(arg1, arg2);
+        }
+    }
+    set_xy(x, y, value) {
         (this.data[y] || [])[x] = value;
+    }
+    set_pos(pos, value) {
+        this.set_xy(pos.x, pos.y, value);
+    }
+    set(arg1, arg2, arg3) {
+        if (arg1 instanceof RoomPosition) {
+            this.set_pos(arg1, arg2);
+        } else {
+            this.set_xy(arg1, arg2, arg3);
+        }
     }
     duplicate(map) {
         let matrix = new Matrix(`🈳`);
@@ -48,14 +68,11 @@ class Matrix {
         this.data = _.map(this.data, (vector) => _.map(vector, map));
         return this;
     }
-    to_PathFinder_CostMatrix(map) {
-        let matrix = new PathFinder.CostMatrix();
-        for (let y = 0; y < 50; y++) {
-            for (let x = 0; x < 50; x++) {
-                matrix.set(x, y, map(this.data[y][x]));
-            }
-        }
-        return matrix;
+    zip_with(matrix, map) {
+        this.data = _.zipWith(this.data, matrix.data, (vector1, vector2) =>
+            _.zipWith(vector1, vector2, map)
+        );
+        return this;
     }
     find_best(predictor, validator) {
         let find_best = [50, 50, null];
@@ -72,71 +89,77 @@ class Matrix {
         }
         return [find_best[0], find_best[1]];
     }
-    zip_with(matrix, map) {
-        this.data = _.zipWith(this.data, matrix.data, (vector1, vector2) =>
-            _.zipWith(vector1, vector2, map)
-        );
-        return this;
-    }
-    find_path(starts) {
-        let queue = new Heap(`heap`, {}),
-            direction_matrix = new Matrix(),
-            direction_data = dir.data,
-            distance_matrix = new Matrix(Infinity),
-            distance_data = dis.data;
+    find_path(origin, predictor) {
+        let dijk_queue = new Heap(`heap`, {}),
+            dis_mat = new Matrix(Infinity),
+            dir_mat = new Matrix(),
+            starts = origin instanceof Array ? origin : [origin];
         _.forEach(starts, (start) => {
             if (!(start instanceof RoomPosition)) {
                 start = start.pos;
             }
             if (start instanceof RoomPosition) {
-                let x = start.x,
-                    y = start.y;
-                distance_data[y][x] = 0;
-                queue.push([0, x, y]);
+                dis_mat.set_pos(start, 0);
+                dijk_queue.push([0, start]);
             }
         });
-        for (let top = queue.pop(); top; top = queue.pop()) {
-            let [d0, x0, y0] = top;
-            if (distance_data[y0][x0] == d0) {
-                _.forEach(DeltaOf, ([dx, dy], dir) => {
-                    let x = x0 + dx,
-                        y = y0 + dy;
-                    if (Check(x, y)) {
-                        let d = d0 + MoveCostOf[this.data[y][x]];
-                        if (distance_data[y][x] > d) {
-                            distance_data[y][x] = d;
-                            direction_data[y][x] = OppositeOf[dir];
-                            queue.push([d, x, y]);
+        for (let top = dijk_queue.pop(); top; top = dijk_queue.pop()) {
+            let [d0, pos0] = top;
+            if (dis_mat.get_pos(pos0) == d0) {
+                if (predictor(pos0)) {
+                    return { dis_mat: dis_mat, dir_mat: dir_mat, pos: pos0 };
+                }
+                _.forEach(Directions, (direction) => {
+                    let pos = pos0.move(direction);
+                    if (pos) {
+                        let d = d0 + this.get_pos(pos);
+                        if (dis_mat.get_pos(pos) > d) {
+                            dis_mat.set_pos(pos, d);
+                            dir_mat.set_pos(pos, OppositeOf[direction]);
+                            dijk_queue.push([d, pos]);
                         }
                     }
                 });
             }
         }
-        return { distance: distance_matrix, direction: direction_matrix };
+        return { dis_mat: dis_mat, dir_mat: dir_mat };
     }
-    to_openness_of(direction, predictor, bound) {
+    to_path(start) {
+        let pos = new RoomPosition(start.x, start.y, start.roomName),
+            path = [];
+        for (let dir = this.get_pos(pos); dir; dir = this.get_pos(pos)) {
+            path.push(dir);
+            pos.moveTo(dir);
+        }
+        path.pop();
+        return path;
+    }
+    to_openness_toward(direction, predictor, bound) {
         let check = (value) => (value === undefined ? bound : value),
             [x0, dx, y0, dy] = bound_table[direction],
-            matrix = new Matrix(0),
-            data = matrix.data;
+            openness = new Matrix();
         for (let y = y0; Check(y); y += dy) {
             for (let x = x0; Check(x); x += dx) {
-                data[y][x] = predictor(this.data[y][x])
-                    ? 0
-                    : Math.min(
-                          check((data[y] || [])[x - dx]),
-                          check((data[y - dy] || [])[x]),
-                          check((data[y - dy] || [])[x - dx])
-                      ) + 1;
+                // prettier-ignore
+                openness.set_xy(x, y,
+                    predictor(this.get_xy(x, y))
+                        ? 0
+                        : Math.min(
+                              check(openness.get_xy(x - dx, y)),
+                              check(openness.get_xy(x, y - dy)),
+                              check(openness.get_xy(x - dx, y - dy))
+                          ) + 1
+                );
             }
         }
-        return matrix;
+        return openness;
     }
-    to_openness(pre, bound) {
-        return this.to_openness_of(TOP_LEFT, pre, bound)
-            .zip_with(this.to_openness_of(TOP_RIGHT, pre, bound), Matrix.min)
-            .zip_with(this.to_openness_of(BOTTOM_RIGHT, pre, bound), Matrix.min)
-            .zip_with(this.to_openness_of(BOTTOM_LEFT, pre, bound), Matrix.min);
+    to_openness(predictor, bound) {
+        // prettier-ignore
+        return this.to_openness_toward(TOP_LEFT, predictor, bound)
+            .zip_with(this.to_openness_toward(TOP_RIGHT, predictor, bound), Matrix.min)
+            .zip_with(this.to_openness_toward(BOTTOM_RIGHT, predictor, bound), Matrix.min)
+            .zip_with(this.to_openness_toward(BOTTOM_LEFT, predictor, bound), Matrix.min);
     }
     print() {
         let log = ``;

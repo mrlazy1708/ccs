@@ -29,7 +29,10 @@ function define_constant() {
     global.LableLength = 25;
     global.LeadingSpaces = ` `.repeat(LableLength);
     // prettier-ignore
-    global.MeaningOf = [`OK`,`ERR_NOT_OWNER`,`ERR_NO_PATH`,`ERR_NAME_EXISTS`,`ERR_BUSY`,`ERR_NOT_FOUND`,`ERR_NOT_ENOUGH_RESOURCES`,`ERR_INVALID_TARGET`,`ERR_FULL`,`ERR_NOT_IN_RANGE`,`ERR_INVALID_ARGS`,`ERR_TIRED`,`ERR_NO_BODYPART`,`ERR_NOT_ENOUGH_EXTENSIONS`,`ERR_RCL_NOT_ENOUGH`,`ERR_GCL_NOT_ENOUGH`,];
+    global.MeaningOf = {
+        [OK]: `OK`, [ERR_NOT_OWNER]: `ERR_NOT_OWNER`, [ERR_NO_PATH]: `ERR_NO_PATH`, [ERR_NAME_EXISTS]: `ERR_NAME_EXISTS`, [ERR_BUSY]: `ERR_BUSY`, [ERR_NOT_FOUND]: `ERR_NOT_FOUND`, [ERR_NOT_ENOUGH_RESOURCES]: `ERR_NOT_ENOUGH_RESOURCES`, [ERR_INVALID_TARGET]: `ERR_INVALID_TARGET`, [ERR_FULL]: `ERR_FULL`, [ERR_NOT_IN_RANGE]: `ERR_NOT_IN_RANGE`, [ERR_INVALID_ARGS]: `ERR_INVALID_ARGS`, [ERR_TIRED]: `ERR_TIRED`, [ERR_NO_BODYPART]: `ERR_NO_BODYPART`, [ERR_NOT_ENOUGH_EXTENSIONS]: `ERR_NOT_ENOUGH_EXTENSIONS`, [ERR_RCL_NOT_ENOUGH]: `ERR_RCL_NOT_ENOUGH`, [ERR_GCL_NOT_ENOUGH]: `ERR_GCL_NOT_ENOUGH`,
+        [TOP]: `TOP`, [TOP_RIGHT]: `TOP_RIGHT`, [RIGHT]: `RIGHT`, [BOTTOM_RIGHT]: `BOTTOM_RIGHT`, [BOTTOM]: `BOTTOM`, [BOTTOM_LEFT]: `BOTTOM_LEFT`, [LEFT]: `LEFT`, [TOP_LEFT]: `TOP_LEFT`,
+    };
     global.SayingOf = {
         idle: [`🥱`, `🥱`],
         moveTo: [`🚗`, `🎯`],
@@ -44,6 +47,14 @@ function define_constant() {
         creep: `❓`,
         room: `🏡`,
         [STRUCTURE_SPAWN]: `🕸`,
+        [TOP]: `↑`,
+        [TOP_RIGHT]: `↗`,
+        [RIGHT]: `→`,
+        [BOTTOM_RIGHT]: `↘`,
+        [BOTTOM]: `↓`,
+        [BOTTOM_LEFT]: `↙`,
+        [LEFT]: `←`,
+        [TOP_LEFT]: `↖`,
     };
     global.ShortOf = {
         [LOOK_SOURCES]: `SR`,
@@ -55,34 +66,31 @@ function define_constant() {
     };
     // prettier-ignore
     global.Faces = {
-        boy: ['👨','👨🏻','👨🏼','👨🏽','👨🏾','👨🏿','👨‍🦱','👨🏻‍🦱','👨🏼‍🦱','👨🏽‍🦱','👨🏾‍🦱','👨🏿‍🦱','👨‍🦰','👨🏻‍🦰','👨🏼‍🦰','👨🏽‍🦰','👨🏾‍🦰','👨🏿‍🦰','👱‍♂️','👱🏻‍♂️','👱🏼‍♂️','👱🏽‍♂️','👱🏾‍♂️','👱🏿‍♂️','👨‍🦳','👨🏻‍🦳','👨🏼‍🦳','👨🏽‍🦳','👨🏾‍🦳','👨🏿‍🦳','👨‍🦲','👨🏻‍🦲','👨🏼‍🦲','👨🏽‍🦲','👨🏾‍🦲','👨🏿‍🦲',],
-        girl: ['👩','👩🏻','👩🏼','👩🏽','👩🏾','👩🏿','👩‍🦱','👩🏻‍🦱','👩🏼‍🦱','👩🏽‍🦱','👩🏾‍🦱','👩🏿‍🦱','👩‍🦰','👩🏻‍🦰','👩🏼‍🦰','👩🏽‍🦰','👩🏾‍🦰','👩🏿‍🦰','👱‍♀️','👱🏻‍♀️','👱🏼‍♀️','👱🏽‍♀️','👱🏾‍♀️','👱🏿‍♀️','👩‍🦳','👩🏻‍🦳','👩🏼‍🦳','👩🏽‍🦳','👩🏾‍🦳','👩🏿‍🦳','👩‍🦲','👩🏻‍🦲','👩🏼‍🦲','👩🏽‍🦲','👩🏾‍🦲','👩🏿‍🦲',],
+        boy: ["👨", "👨🏻", "👨🏼", "👨🏽", "👨🏾", "👨🏿", "👨‍🦱", "👨🏻‍🦱", "👨🏼‍🦱", "👨🏽‍🦱", "👨🏾‍🦱", "👨🏿‍🦱", "👨‍🦰", "👨🏻‍🦰", "👨🏼‍🦰", "👨🏽‍🦰", "👨🏾‍🦰", "👨🏿‍🦰", "👱‍♂️", "👱🏻‍♂️", "👱🏼‍♂️", "👱🏽‍♂️", "👱🏾‍♂️", "👱🏿‍♂️", "👨‍🦳", "👨🏻‍🦳", "👨🏼‍🦳", "👨🏽‍🦳", "👨🏾‍🦳", "👨🏿‍🦳", "👨‍🦲", "👨🏻‍🦲", "👨🏼‍🦲", "👨🏽‍🦲", "👨🏾‍🦲", "👨🏿‍🦲"],
+        girl: ["👩", "👩🏻", "👩🏼", "👩🏽", "👩🏾", "👩🏿", "👩‍🦱", "👩🏻‍🦱", "👩🏼‍🦱", "👩🏽‍🦱", "👩🏾‍🦱", "👩🏿‍🦱", "👩‍🦰", "👩🏻‍🦰", "👩🏼‍🦰", "👩🏽‍🦰", "👩🏾‍🦰", "👩🏿‍🦰", "👱‍♀️", "👱🏻‍♀️", "👱🏼‍♀️", "👱🏽‍♀️", "👱🏾‍♀️", "👱🏿‍♀️", "👩‍🦳", "👩🏻‍🦳", "👩🏼‍🦳", "👩🏽‍🦳", "👩🏾‍🦳", "👩🏿‍🦳", "👩‍🦲", "👩🏻‍🦲", "👩🏼‍🦲", "👩🏽‍🦲", "👩🏾‍🦲", "👩🏿‍🦲"],
     };
     // prettier-ignore
     global.Names = {
-        last: [`Smith`,`Johnson`,`Williams`,`Brown`,`Jones`,`Garcia`,`Miller`,`Davis`,`Rodriguez`,`Martinez`,`Hernandez`,`Lopez`,`Gonzalez`,`Wilson`,`Anderson`,`Thomas`,`Taylor`,`Moore`,`Jackson`,`Martin`,`Lee`,`Perez`,`Thompson`,`White`,`Harris`,`Sanchez`,`Clark`,`Ramirez`,`Lewis`,`Robinson`,`Walker`,`Young`,`Allen`,`King`,`Wright`,`Scott`,`Torres`,`Nguyen`,`Hill`,`Flores`,`Green`,`Adams`,`Nelson`,`Baker`,`Hall`,`Rivera`,`Campbell`,`Mitchell`,`Carter`,`Roberts`,],
+        last: [`Smith`, `Johnson`, `Williams`, `Brown`, `Jones`, `Garcia`, `Miller`, `Davis`, `Rodriguez`, `Martinez`, `Hernandez`, `Lopez`, `Gonzalez`, `Wilson`, `Anderson`, `Thomas`, `Taylor`, `Moore`, `Jackson`, `Martin`, `Lee`, `Perez`, `Thompson`, `White`, `Harris`, `Sanchez`, `Clark`, `Ramirez`, `Lewis`, `Robinson`, `Walker`, `Young`, `Allen`, `King`, `Wright`, `Scott`, `Torres`, `Nguyen`, `Hill`, `Flores`, `Green`, `Adams`, `Nelson`, `Baker`, `Hall`, `Rivera`, `Campbell`, `Mitchell`, `Carter`, `Roberts`],
         first: {
-            boy: [  `Liam`,`Noah`,`Oliver`,`William`,`Elijah`,`James`,`Benjamin`,`Lucas`,`Mason`,`Ethan`,`Alexander`,`Henry`,`Jacob`,`Michael`,`Daniel`,`Logan`,`Jackson`,`Sebastian`,`Jack`,`Aiden`,`Owen`,`Samuel`,`Matthew`,`Joseph`,`Levi`,`Mateo`,`David`,`John`,`Wyatt`,`Carter`,`Julian`,`Luke`,`Grayson`,`Isaac`,`Jayden`,`Theodore`,`Gabriel`,`Anthony`,`Dylan`,`Leo`,`Lincoln`,`Jaxon`,`Asher`,`Christopher`,`Josiah`,`Andrew`,`Thomas`,`Joshua`,`Ezra`,`Hudson`,
-                    `Charles`,`Caleb`,`Isaiah`,`Ryan`,`Nathan`,`Adrian`,`Christian`,`Maverick`,`Colton`,`Elias`,`Aaron`,`Eli`,`Landon`,`Jonathan`,`Nolan`,`Hunter`,`Cameron`,`Connor`,`Santiago`,`Jeremiah`,`Ezekiel`,`Angel`,`Roman`,`Easton`,`Miles`,`Robert`,`Jameson`,`Nicholas`,`Greyson`,`Cooper`,`Ian`,`Carson`,`Axel`,`Jaxson`,`Dominic`,`Leonardo`,`Luca`,`Austin`,`Jordan`,`Adam`,`Xavier`,`Jose`,`Jace`,`Everett`,`Declan`,`Evan`,`Kayden`,`Parker`,`Wesley`,`Kai`,],
-            girl: [ `Olivia`,`Emma`,`Ava`,`Sophia`,`Isabella`,`Charlotte`,`Amelia`,`Mia`,`Harper`,`Evelyn`,`Abigail`,`Emily`,`Ella`,`Elizabeth`,`Camila`,`Luna`,`Sofia`,`Avery`,`Mila`,`Aria`,`Scarlett`,`Penelope`,`Layla`,`Chloe`,`Victoria`,`Madison`,`Eleanor`,`Grace`,`Nora`,`Riley`,`Zoey`,`Hannah`,`Hazel`,`Lily`,`Ellie`,`Violet`,`Lillian`,`Zoe`,`Stella`,`Aurora`,`Natalie`,`Emilia`,`Everly`,`Leah`,`Aubrey`,`Willow`,`Addison`,`Lucy`,`Audrey`,`Bella`,
-                    `Nova`,`Brooklyn`,`Paisley`,`Savannah`,`Claire`,`Skylar`,`Isla`,`Genesis`,`Naomi`,`Elena`,`Caroline`,`Eliana`,`Anna`,`Maya`,`Valentina`,`Ruby`,`Kennedy`,`Ivy`,`Ariana`,`Aaliyah`,`Cora`,`Madelyn`,`Alice`,`Kinsley`,`Hailey`,`Gabriella`,`Allison`,`Gianna`,`Serenity`,`Samantha`,`Sarah`,`Autumn`,`Quinn`,`Eva`,`Piper`,`Sophie`,`Sadie`,`Delilah`,`Josephine`,`Nevaeh`,`Adeline`,`Arya`,`Emery`,`Lydia`,`Clara`,`Vivian`,`Madeline`,`Peyton`,`Julia`,`Rylee`,],
+            boy: [`Liam`, `Noah`, `Oliver`, `William`, `Elijah`, `James`, `Benjamin`, `Lucas`, `Mason`, `Ethan`, `Alexander`, `Henry`, `Jacob`, `Michael`, `Daniel`, `Logan`, `Jackson`, `Sebastian`, `Jack`, `Aiden`, `Owen`, `Samuel`, `Matthew`, `Joseph`, `Levi`, `Mateo`, `David`, `John`, `Wyatt`, `Carter`, `Julian`, `Luke`, `Grayson`, `Isaac`, `Jayden`, `Theodore`, `Gabriel`, `Anthony`, `Dylan`, `Leo`, `Lincoln`, `Jaxon`, `Asher`, `Christopher`, `Josiah`, `Andrew`, `Thomas`, `Joshua`, `Ezra`, `Hudson`, `Charles`, `Caleb`, `Isaiah`, `Ryan`, `Nathan`, `Adrian`, `Christian`, `Maverick`, `Colton`, `Elias`, `Aaron`, `Eli`, `Landon`, `Jonathan`, `Nolan`, `Hunter`, `Cameron`, `Connor`, `Santiago`, `Jeremiah`, `Ezekiel`, `Angel`, `Roman`, `Easton`, `Miles`, `Robert`, `Jameson`, `Nicholas`, `Greyson`, `Cooper`, `Ian`, `Carson`, `Axel`, `Jaxson`, `Dominic`, `Leonardo`, `Luca`, `Austin`, `Jordan`, `Adam`, `Xavier`, `Jose`, `Jace`, `Everett`, `Declan`, `Evan`, `Kayden`, `Parker`, `Wesley`, `Kai`],
+            girl: [`Olivia`, `Emma`, `Ava`, `Sophia`, `Isabella`, `Charlotte`, `Amelia`, `Mia`, `Harper`, `Evelyn`, `Abigail`, `Emily`, `Ella`, `Elizabeth`, `Camila`, `Luna`, `Sofia`, `Avery`, `Mila`, `Aria`, `Scarlett`, `Penelope`, `Layla`, `Chloe`, `Victoria`, `Madison`, `Eleanor`, `Grace`, `Nora`, `Riley`, `Zoey`, `Hannah`, `Hazel`, `Lily`, `Ellie`, `Violet`, `Lillian`, `Zoe`, `Stella`, `Aurora`, `Natalie`, `Emilia`, `Everly`, `Leah`, `Aubrey`, `Willow`, `Addison`, `Lucy`, `Audrey`, `Bella`, `Nova`, `Brooklyn`, `Paisley`, `Savannah`, `Claire`, `Skylar`, `Isla`, `Genesis`, `Naomi`, `Elena`, `Caroline`, `Eliana`, `Anna`, `Maya`, `Valentina`, `Ruby`, `Kennedy`, `Ivy`, `Ariana`, `Aaliyah`, `Cora`, `Madelyn`, `Alice`, `Kinsley`, `Hailey`, `Gabriella`, `Allison`, `Gianna`, `Serenity`, `Samantha`, `Sarah`, `Autumn`, `Quinn`, `Eva`, `Piper`, `Sophie`, `Sadie`, `Delilah`, `Josephine`, `Nevaeh`, `Adeline`, `Arya`, `Emery`, `Lydia`, `Clara`, `Vivian`, `Madeline`, `Peyton`, `Julia`, `Rylee`],
         },
     };
-    // prettier-ignore
-    global.Directions = [[0, -1],[1, -1],[1, 0],[1, 1],[0, 1],[-1, 1],[-1, 0],[-1, -1],];
-    // prettier-ignore
-    global.Perpendiculars = [[0, -1],[1, 0],[0, 1],[-1, 0],];
-    // prettier-ignore
-    global.Diagonals = [[-1, 1],[-1, -1],[1, -1],[1, 1],];
     global.MoveCostOf = {
-        wall: CONSTRUCTION_COST_ROAD_WALL_RATIO,
-        swamp: CONSTRUCTION_COST_ROAD_SWAMP_RATIO,
-        plain: 1,
+        plain: 2,
+        swamp: 10,
+        wall: Infinity,
     };
     // prettier-ignore
-    global.DeltaOf = {[TOP]: [0, -1], [TOP_RIGHT]: [1, -1], [RIGHT]: [1, 0], [BOTTOM_RIGHT]: [1, 1], [BOTTOM]: [0, 1], [BOTTOM_LEFT]: [-1, 1], [LEFT]: [-1, 0], [TOP_LEFT]: [-1, -1],};
+    global.Directions = [TOP, TOP_RIGHT, RIGHT, BOTTOM_RIGHT, BOTTOM, BOTTOM_LEFT, LEFT, TOP_LEFT];
+    global.Perpendiculars = [TOP, RIGHT, BOTTOM, LEFT];
+    global.Diagonals = [TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, TOP_LEFT];
     // prettier-ignore
-    global.OppositeOf = {[TOP]: BOTTOM, [TOP_RIGHT]: BOTTOM_LEFT, [RIGHT]: LEFT, [BOTTOM_RIGHT]: TOP_LEFT, [BOTTOM]: TOP, [BOTTOM_LEFT]: TOP_RIGHT, [LEFT]: RIGHT, [TOP_LEFT]: BOTTOM_RIGHT,};
+    global.OppositeOf = { [TOP]: BOTTOM, [TOP_RIGHT]: BOTTOM_LEFT, [RIGHT]: LEFT, [BOTTOM_RIGHT]: TOP_LEFT, [BOTTOM]: TOP, [BOTTOM_LEFT]: TOP_RIGHT, [LEFT]: RIGHT, [TOP_LEFT]: BOTTOM_RIGHT };
+    // prettier-ignore
+    global.DeltaOf = { [TOP]: [0, -1], [TOP_RIGHT]: [1, -1], [RIGHT]: [1, 0], [BOTTOM_RIGHT]: [1, 1], [BOTTOM]: [0, 1], [BOTTOM_LEFT]: [-1, 1], [LEFT]: [-1, 0], [TOP_LEFT]: [-1, -1] };
+    global.Deltas = _.map(DeltaOf);
     global.Dye = (string, color) => `<b style="color:${color}">${string}</b>`;
     global.Parse = (room_name) =>
         /^([WE])([0-9]+)([NS])([0-9]+)$/.exec(room_name);
@@ -101,13 +109,35 @@ function define_constant() {
         if (object instanceof Deposit) return LOOK_DEPOSITS;
         if (object instanceof Flag) return LOOK_FLAGS;
     };
+    global.Recover = (memory) => {
+        try {
+            return new RoomPosition(memory.x, memory.y, memory.roomName);
+        } catch (err) {}
+    };
 }
 
 function set_prototype() {
+    RoomPosition.prototype.move = function (direction) {
+        let x = this.x + DeltaOf[direction][0],
+            y = this.y + DeltaOf[direction][1];
+        if (Check(x, y)) {
+            return new RoomPosition(x, y, this.roomName);
+        }
+    };
+    RoomPosition.prototype.moveTo = function (direction) {
+        this.x += DeltaOf[direction][0];
+        this.y += DeltaOf[direction][1];
+        return this;
+    };
+    RoomPosition.prototype.memorize = function (memory) {
+        memory.x = this.x;
+        memory.y = this.y;
+        memory.roomName = this.roomName;
+    };
     RoomPosition.prototype.getWorkSite = function () {
         let terrain = new Room.Terrain(this.roomName),
             delta = _.reduce(
-                Directions,
+                Deltas,
                 (rst, delta) =>
                     rst ||
                     (terrain.get(this.x + delta[0], this.y + delta[1]) &
@@ -127,7 +157,7 @@ function set_prototype() {
             x = this.x,
             y = this.y;
         return _.sum(
-            _.map(Directions, (delta) =>
+            _.map(Deltas, (delta) =>
                 terrain.get(x + delta[0], y + delta[1]) == TERRAIN_MASK_WALL
                     ? 0
                     : 1

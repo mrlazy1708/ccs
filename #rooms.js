@@ -17,11 +17,25 @@ class Rooms extends Hash {
         }
     }
     require(name, ...args) {
-        if (this[name] || this.memory[`plan_${name}_ok`]) {
+        if (
+            this[name] ||
+            this.memory[`plan_${name}_ok`] ||
+            this.memory[`plan_${name}_${args}_ok`]
+        ) {
             return true;
         } else {
             this.result(`ERR_NO_${name.toUpperCase()}`);
             this.run_one(`plan_${name}`, args);
+        }
+    }
+    requires(name, ...argss) {
+        if (argss.length == 0) {
+            return true;
+        } else {
+            let args = argss.shift();
+            if (this.require(name, ...args)) {
+                return this.requires(name, ...argss);
+            }
         }
     }
     check(...names) {
@@ -67,42 +81,56 @@ class Rooms extends Hash {
         return true;
     }
 
-    plan_pref_controller() {
+    plan_move_cost() {
         if (this.check(`terrain`)) {
             this.result(`OK`);
-            this.pref_controller = this.terrain.find_path([
+            this.move_cost = this.terrain.duplicate(
+                (terrain) => MoveCostOf[terrain]
+            );
+            return true;
+        }
+    }
+
+    plan_pref_controller() {
+        if (this.check(`move_cost`)) {
+            this.result(`OK`);
+            this.pref_controller = this.move_cost.find_path(
                 this.object.controller,
-            ]).distance;
+                () => false
+            ).dis_mat;
             return true;
         }
     }
 
     plan_pref_mineral() {
-        if (this.check(`terrain`)) {
+        if (this.check(`move_cost`)) {
             this.result(`OK`);
-            this.pref_mineral = this.terrain.find_path(
-                this.object.find(FIND_MINERALS)
-            ).distance;
+            this.pref_mineral = this.move_cost.find_path(
+                this.object.find(FIND_MINERALS),
+                () => false
+            ).dis_mat;
             return true;
         }
     }
 
     plan_pref_source() {
-        if (this.check(`terrain`)) {
+        if (this.check(`move_cost`)) {
             this.result(`OK`);
-            this.pref_source = this.terrain.find_path(
-                this.object.find(FIND_SOURCES)
-            ).distance;
+            this.pref_source = this.move_cost.find_path(
+                this.object.find(FIND_SOURCES),
+                () => false
+            ).dis_mat;
             return true;
         }
     }
 
     plan_pref_exit() {
-        if (this.check(`terrain`)) {
+        if (this.check(`move_cost`)) {
             this.result(`OK`);
-            this.pref_exit = this.terrain.find_path(
-                this.object.find(FIND_EXIT)
-            ).distance;
+            this.pref_exit = this.move_cost.find_path(
+                this.object.find(FIND_EXIT),
+                () => false
+            ).dis_mat;
             return true;
         }
     }
@@ -130,6 +158,7 @@ class Rooms extends Hash {
         ) {
             this.result(`OK`);
             this.pref = this.pref_controller
+                .duplicate(_.identity)
                 .zip_with(this.pref_mineral, Matrix.max)
                 .zip_with(this.pref_source, Matrix.max)
                 .zip_with(this.pref_exit, Matrix.div)
@@ -140,29 +169,22 @@ class Rooms extends Hash {
 
     plan_center() {
         if (this.memory.center) {
+            this.result(`OK`);
             this.center = new RoomPosition(...this.memory.center, this.key);
             return true;
         } else if (this.check(`pref`)) {
             this.result(`OK`);
-            this.memory.center = this.pref.find_best(Matrix.less);
+            this.memory.center = this.pref.find_best(Matrix.less, () => true);
             this.center = new RoomPosition(...this.memory.center, this.key);
             return true;
         }
     }
 
-    plan_centrality() {
-        if (this.check(`terrain`, `center`)) {
-            this.result(`OK`);
-            this.centrality = this.terrain.find_path([this.center]).distance;
-            return true;
-        }
-    }
-
-    plan_cost_matrix() {
+    plan_openness_cost() {
         if (this.check(`pref_openness`)) {
             this.result(`OK`);
-            this.cost_matrix = this.pref_openness.to_PathFinder_CostMatrix(
-                (v) => Math.min(10 / v, 255)
+            this.openness_cost = this.pref_openness.duplicate((v) =>
+                Math.min(10 / v, 255)
             );
             return true;
         }
@@ -170,90 +192,28 @@ class Rooms extends Hash {
 
     plan_road_tree() {
         if (this.memory.road_tree) {
+            this.result(`OK`);
             this.road_tree = new Tree(`road_tree`, this.memory);
             return true;
-        } else if (this.check(`cost_matrix`)) {
+        } else if (this.check(`center`, `openness_cost`)) {
             this.result(`OK`);
-            // Prim's Algorithm
             this.road_tree = new Tree(`road_tree`, this.memory);
-            this.blueprint = new Matrix();
-            let root = this.road_tree.root,
-                roads = [this.center],
-                opened_targets = _.map(
-                    _.flatten([
-                        this.object.controller,
-                        this.object.find(FIND_SOURCES),
-                        this.object.find(FIND_MINERALS),
-                    ]),
-                    (target) =>
-                        Object({
-                            id: target.id,
-                            pos: target.pos.getWorkSite(),
-                            opos: target.pos,
-                        })
-                );
-            root.memory.x = this.center.x;
-            root.memory.y = this.center.y;
-            this.blueprint.set(this.center.x, this.center.y, root);
-            _.forEach(opened_targets, (target) =>
-                this.cost_matrix.set(target.pos.x, target.pos.y, 255)
+            this.blueprint = this.terrain.duplicate((terrain) =>
+                terrain == `wall` ? `WALL` : undefined
             );
-            for (; opened_targets.length != 0; ) {
-                let rst = _.reduce(
-                    opened_targets,
-                    (rst, target) => {
-                        let find = PathFinder.search(target.pos, roads, {
-                            roomCallback: () => this.cost_matrix,
-                        });
-                        if (find.incomplete) {
-                            return rst;
-                        } else if (rst) {
-                            if (find.path.length < rst.path.length) {
-                                return { id: target.id, path: find.path };
-                            } else {
-                                return rst;
-                            }
-                        } else {
-                            return { id: target.id, path: find.path };
-                        }
-                    },
-                    null
-                );
-                let register = (node, pos) => {
-                        let direction = pos.getDirectionTo(node.x, node.y);
-                        node = node.grow();
-                        this.blueprint.set(pos.x, pos.y, node);
-                        node.memory.x = pos.x;
-                        node.memory.y = pos.y;
-                        node.memory.d = direction;
-                        roads.push(pos);
-                        return node;
-                    },
-                    cross = rst.path.pop(),
-                    node = _.reduceRight(
-                        rst.path,
-                        register,
-                        this.blueprint.get(cross.x, cross.y)
-                    );
-                _.remove(opened_targets, (target) => {
-                    if (target.id == rst.id) {
-                        node = register(node, target.pos);
-                        node.binds[target.id] = target.pos.getDirectionTo(
-                            target.opos
-                        );
-                        return true;
-                    }
-                });
-            }
+            this.road_tree.root.pos = this.center;
+            this.blueprint.set(this.center, this.road_tree.root);
             return true;
         }
     }
 
-    plan_bind_to_tree(pos, key) {
-        if (this.check(`road_tree`, `cost_matrix`)) {
+    plan_centrality() {
+        if (this.check(`terrain`, `center`)) {
             this.result(`OK`);
-            
-            this.memory[`plan_bind_to_tree${key}`] = true;
+            this.centrality = this.terrain.find_path(
+                this.center,
+                () => false
+            ).dis_mat;
             return true;
         }
     }
@@ -262,19 +222,116 @@ class Rooms extends Hash {
         if (this.check(`terrain`, `road_tree`)) {
             this.result(`OK`);
             this.blueprint = this.terrain.duplicate((terrain) =>
-                terrain == `wall` ? `wall` : undefined
+                terrain == `wall` ? `WALL` : undefined
             );
-            this.road_tree.dfs((node) => {
-                this.blueprint.set(node.x, node.y, node);
+            this.road_tree.traverse((node) => {
+                this.blueprint.set(node.pos, node);
                 _.forEach(node.binds, (dir, key) =>
-                    this.blueprint.set(
-                        node.x + DeltaOf[dir][0],
-                        node.y + DeltaOf[dir][1],
-                        key
-                    )
+                    this.blueprint.set(node.pos.move(dir), key)
                 );
             });
             return true;
+        }
+    }
+
+    plan_bind_to(pos, key) {
+        if (this.check(`blueprint`, `openness_cost`)) {
+            let find_result = this.openness_cost.find_path(pos, (pos) => {
+                return this.blueprint.get(pos) instanceof Tree.Node;
+            });
+            if (find_result.pos) {
+                this.result(`OK`);
+                let path = find_result.dir_mat.to_path(find_result.pos),
+                    register = (node, dir) => {
+                        node = node.grow();
+                        node.dir = dir;
+                        this.blueprint.set(node.pos, node);
+                        return node;
+                    },
+                    node = _.reduce(
+                        path,
+                        register,
+                        this.blueprint.get(find_result.pos)
+                    );
+                node.binds[key] = node.pos.getDirectionTo(pos);
+                this.memory[`plan_bind_to_${[pos, key]}_ok`] = true;
+                return true;
+            } else {
+                this.result(`ERR_NO_PATH`);
+            }
+        }
+    }
+
+    plan_controller() {
+        let controller = this.object.controller;
+        if (controller) {
+            if (this.require(`bind_to`, controller.pos, controller.id)) {
+                this.result(`OK`);
+                this.memory.plan_controller_ok = true;
+                return true;
+            }
+        } else {
+            this.result(`OK`);
+            this.memory.plan_controller_ok = true;
+            return true;
+        }
+    }
+
+    plan_source() {
+        let sources = this.object.find(FIND_SOURCES),
+            argss = _.map(sources, (source) => [source.pos, source.id]);
+        if (this.requires(`bind_to`, ...argss)) {
+            this.result(`OK`);
+            this.memory.plan_source_ok = true;
+            return true;
+        }
+    }
+
+    plan_mineral() {
+        let minerals = this.object.find(FIND_MINERALS),
+            argss = _.map(minerals, (mineral) => [mineral.pos, mineral.id]);
+        if (this.requires(`bind_to`, ...argss)) {
+            this.result(`OK`);
+            this.memory.plan_mineral_ok = true;
+            return true;
+        }
+    }
+
+    plan_pos_exits() {
+        if (this.memory.pos_exits) {
+            this.result(`OK`);
+            this.pos_exits = _.mapValues(this.memory.pos_exits, Recover);
+            return true;
+        } else {
+            this.result(`OK`);
+            this.memory.pos_exits = {};
+            _.forEach(Perpendiculars, (dir) => {
+                let exits = this.object.find(
+                        global[`FIND_EXIT_${MeaningOf[dir]}`]
+                    ),
+                    sort = new Heap(``, {}, (p, q) => p.x < q.x || p.y < q.y);
+                _.forEach(exits, (exit) => sort.push(exit));
+                for (let cnt = 0; cnt < exits.length >> 1; cnt++) {
+                    sort.pop();
+                }
+                if (sort.top) {
+                    sort.top.memorize(
+                        (this.memory.pos_exits[`E${MeaningOf[dir]}`] = {})
+                    );
+                }
+            });
+            return true;
+        }
+    }
+
+    plan_exit() {
+        if (this.check(`pos_exits`)) {
+            let argss = _.map(this.pos_exits, (pos, key) => [pos, key]);
+            if (this.requires(`bind_to`, ...argss)) {
+                this.result(`OK`);
+                this.memory.plan_exit_ok = true;
+                return true;
+            }
         }
     }
 
@@ -287,41 +344,64 @@ class Rooms extends Hash {
         }
     }
 
-    plan_extension_road() {
-        if (this.check(`blueprint`, `road_tree`)) {
+    plan_map() {
+        if (this.check(`controller`, `source`, `mineral`, `exit`)) {
             this.result(`OK`);
-            let matrix = new Matrix();
-            this.extension_road = matrix;
-            this.road_tree.dfs((node) =>
-                _.forEach(Perpendiculars, ([dx, dy]) => {
-                    if (!this.blueprint.get(node.x + dx, node.y + dy)) {
-                        matrix.set(node.x + dx, node.y + dy, node);
-                    }
-                })
-            );
+            this.memory.plan_map_ok = true;
             return true;
         }
     }
 
-    plan_extension_heap() {
-        if (this.check(`centrality`, `extension_road`)) {
+    plan_move_cost_prime() {
+        if (this.check(`move_cost`, `road_tree`, `map`)) {
             this.result(`OK`);
-            let heap = new Heap(``, {}, (e1, e2) => e1[0] > e2[0]);
-            this.extension_heap = heap;
+            this.road_tree.traverse((node) =>
+                _.forEach(node.binds, (dir) =>
+                    this.move_cost.set(node.pos.move(dir), 255)
+                )
+            );
+            this.move_cost_prime = this.move_cost;
+            delete this.move_cost;
+            return true;
+        }
+    }
+
+    plan_navigate() {
+        if (this.check(`road_tree`, `move_cost_prime`, `map`)) {
+            this.result(`OK`);
+            let roads = this.road_tree.traverse(
+                    (node, roads) => (roads.push(node), roads)
+                ),
+                navigate = this.move_cost_prime.find_path(roads, () => false)
+                    .dir_mat;
+            this.road_tree.traverse((node) =>
+                navigate.set(node.pos, OppositeOf[node.dir])
+            );
+            this.road_tree.traverse((node, info_s) => {
+                node.info = _.mapValues(node.binds, (_) => null);
+                _.forEach(info_s, (info, index) =>
+                    Object.assign(
+                        node.info,
+                        _.mapValues(info, (_) => index)
+                    )
+                );
+                return node.info;
+            });
+            this.navigate = navigate;
+            return true;
+        }
+    }
+
+    show_flow() {
+        if (this.check(`navigate`)) {
+            this.result(`OK`);
+            let graphic = this.system.graphic;
             for (let y = 0; y < 50; y++) {
                 for (let x = 0; x < 50; x++) {
-                    let road = this.road.get(x, y);
-                    if (road instanceof Tree.Node) {
-                        let value = this.centrality.get(x, y);
-                        if (value) {
-                            let top = heap.top;
-                            if (heap.size >= 50 && value < top[0]) {
-                                heap.pop();
-                            }
-                            if (heap.size < 50) {
-                                heap.push([value, x, y, road]);
-                            }
-                        }
+                    let dir = this.navigate.get(x, y);
+                    if (IconOf[dir]) {
+                        // prettier-ignore
+                        graphic.draw(this.key, `test`, `text`, IconOf[dir], x, y + 0.4, { font: `1` });
                     }
                 }
             }
@@ -329,33 +409,7 @@ class Rooms extends Hash {
         }
     }
 
-    plan_extension() {
-        if (this.check(`spawn`, `blueprint`, `extension_heap`)) {
-            this.result(`OK`);
-            let heap = this.extension_heap;
-            for (let top = heap.pop(), cnt = 1; top; top = heap.pop(), cnt++) {
-                let [_value, x, y, node] = top;
-                node.binds[`E${num}`] = node.pos(this.key).getDirectionTo(x, y);
-                this.blueprint.set(x, y, `E${num}`);
-            }
-            this.memory.plan_extension_ok = true;
-            return true;
-        }
-    }
-
-    plan_table() {
-        if (this.check(`road_tree`)) {
-            this.result(`OK`);
-            this.table = {};
-            let table = this.table;
-            this.road_tree.dfs((node) =>
-                _.forEach(node.binds, (_, key) => (table[key] = node.index))
-            );
-            return true;
-        }
-    }
-
-    show_matrix(name = `pref`) {
+    show_matrix(name) {
         if (this.check(name)) {
             this.result(`OK`);
             let graphic = this.system.graphic;
@@ -363,7 +417,7 @@ class Rooms extends Hash {
             for (let y = 0; y < 50; y++) {
                 for (let x = 0; x < 50; x++) {
                     // prettier-ignore
-                    graphic.draw(this.key, name, `text`,this[name].get(x, y), x, y, { font: `0.5` });
+                    graphic.draw(this.key, name, `text`, this[name].get(x, y), x, y, { font: `0.5` });
                     // this.system.graphic.draw(this.key, name, `circle`, x, y, {
                     //     radius: 0.1 / this[name].get(x, y),
                     // });
@@ -374,24 +428,23 @@ class Rooms extends Hash {
     }
 
     show_map() {
-        if (this.check(`blueprint`, `extension`)) {
+        if (this.check(`blueprint`, `map`)) {
             this.result(`OK`);
             let graphic = this.system.graphic;
             // this.system.graphic.erase(this.key, `road`);
-            this.road_tree.dfs((node) => {
+            this.road_tree.traverse((node) => {
                 if (node.father) {
                     // prettier-ignore
-                    graphic.draw(this.key, `road`, `line`, node.x, node.y, node.father.x, node.father.y, { color: `red`});
+                    graphic.draw(this.key, `road`, `line`, node.pos.x, node.pos.y, node.father.pos.x, node.father.pos.y, { color: `red`});
                 }
                 // prettier-ignore
-                graphic.draw(this.key, `road`, `text`, node.index, node.x, node.y, { font: `0.3 American Typewriter`, color: `yellow` });
+                graphic.draw(this.key, `road`, `text`, node.index, node.pos.x, node.pos.y, { font: `0.3 American Typewriter`, color: `yellow` });
                 _.forEach(node.binds, (dir, key) => {
                     let object = Game.getObjectById(key),
-                        x = node.x + DeltaOf[dir][0],
-                        y = node.y + DeltaOf[dir][1];
+                        pos = node.pos.move(dir);
                     key = object ? ShortOf[TypeOf(object)] : key;
                     // prettier-ignore
-                    graphic.draw(this.key, `bind`, `text`, key, x, y, { font: `0.3 American Typewriter`, color: `white` });
+                    graphic.draw(this.key, `bind`, `text`, key, pos.x, pos.y, { font: `0.3 American Typewriter`, color: `white` });
                 });
             });
             return true;

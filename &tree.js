@@ -17,20 +17,23 @@ class Node {
                 ))
         );
     }
-    get x() {
-        return this.memory.x;
+    get pos() {
+        return (this.position =
+            this.position ||
+            Recover(this.memory) ||
+            this.father.pos.move(this.dir));
     }
-    get y() {
-        return this.memory.y;
+    set pos(pos) {
+        pos.memorize(this.memory);
     }
-    get d() {
-        return this.memory.d;
+    get dir() {
+        return this.memory.dir;
+    }
+    set dir(dir) {
+        this.memory.dir = dir;
     }
     get binds() {
         return (this.memory.binds = this.memory.binds || {});
-    }
-    pos(room_name) {
-        return new RoomPosition(this.x, this.y, room_name);
     }
     grow() {
         this.tree.memory.push({ father: this.index });
@@ -44,8 +47,8 @@ class Node {
         this.children.push(node);
         return node;
     }
-    dfs(apply) {
-        let result = _.map(this.children, (child) => child.dfs(apply));
+    traverse(apply) {
+        let result = _.map(this.children, (child) => child.traverse(apply));
         return apply(this, result);
     }
     to_root(route = []) {
@@ -74,8 +77,8 @@ class Tree {
     static get Node() {
         return Node;
     }
-    dfs(apply) {
-        return this.root.dfs(apply);
+    traverse(apply) {
+        return this.root.traverse(apply);
     }
     print() {
         console.log(this.root.print(``, 1));

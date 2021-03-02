@@ -74,11 +74,11 @@ class Hash {
         let cpu_usage_start = Game.cpu.getUsed(),
             ret = this.object[type](...data);
         this.kernel.efficiency += Game.cpu.getUsed() - cpu_usage_start;
-        this.result(MeaningOf[-ret]);
+        this.result(MeaningOf[ret]);
         return ret;
     }
     result(message) {
-        this.log += `: ${Dye(message, `Red`)}`;
+        this.log += `: ${Dye(message, message == `OK` ? `Green` : `Red`)}`;
     }
     idle() {
         return false;
