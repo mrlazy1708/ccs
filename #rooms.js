@@ -185,7 +185,7 @@ class Rooms extends Hash {
                 Math.min(10 / v, CONSTRUCTION_COST_ROAD_WALL_RATIO)
             );
             this.road_tree.traverse((node) =>
-                _.forEach(node.binds, (_, dir) =>
+                _.forEach(node.binds, (dir, _) =>
                     this.bind_cost.set(node.pos.move(dir), Infinity)
                 )
             );
@@ -229,7 +229,7 @@ class Rooms extends Hash {
             );
             this.road_tree.traverse((node) => {
                 this.blueprint.set(node.pos, node);
-                _.forEach(node.binds, (key, dir) =>
+                _.forEach(node.binds, (dir, key) =>
                     this.blueprint.set(node.pos.move(dir), key)
                 );
             });
@@ -498,13 +498,13 @@ class Rooms extends Hash {
     plan_move_cost_prime() {
         if (this.check(`move_cost`, `road_tree`, `all`)) {
             this.result(`OK`);
-            // this.road_tree.traverse((node) =>
-            //     _.forEach(node.binds, (dir) =>
-            //         this.move_cost.set(node.pos.move(dir), 255)
-            //     )
-            // );
-            // this.move_cost_prime = this.move_cost;
-            // delete this.move_cost;
+            this.road_tree.traverse((node) =>
+                _.forEach(node.binds, (dir) =>
+                    this.move_cost.set(node.pos.move(dir), 255)
+                )
+            );
+            this.move_cost_prime = this.move_cost;
+            delete this.move_cost;
             return true;
         }
     }
