@@ -1,19 +1,20 @@
 `use strict`;
 
 class Node {
-    constructor(index, memory, tree) {
+    constructor(index, memory, tree, father) {
         this.index = index;
         this.memory = memory[index] = memory[index] || {};
         this.tree = tree;
+        this.father = father;
 
-        this.father = this.tree.nodes[this.memory.father];
         this.children = _.map(
             (this.memory.children = this.memory.children || []),
             (index) =>
                 (this.tree.nodes[index] = new Node(
                     index,
                     this.tree.memory,
-                    this.tree
+                    this.tree,
+                    this
                 ))
         );
     }
@@ -36,11 +37,11 @@ class Node {
         return (this.memory.binds = this.memory.binds || {});
     }
     grow() {
-        this.tree.memory.push({ father: this.index });
         let node = new Node(
             this.tree.nodes.length,
             this.tree.memory,
-            this.tree
+            this.tree,
+            this
         );
         this.tree.nodes.push(node);
         this.memory.children.push(node.index);
@@ -50,10 +51,6 @@ class Node {
     traverse(apply) {
         let result = _.map(this.children, (child) => child.traverse(apply));
         return apply(this, result);
-    }
-    to_root(route = []) {
-        route.push(this);
-        return this.father ? this.father.to_root(route) : route;
     }
     print(log, depth) {
         return _.reduce(
@@ -72,7 +69,8 @@ class Tree {
         this.memory = memory[name] = memory[name] || [];
 
         this.nodes = [];
-        this.nodes[0] = this.root = new Tree.Node(0, this.memory, this);
+        this.root = new Tree.Node(0, this.memory, this);
+        this.nodes[0] = this.root;
     }
     static get Node() {
         return Node;
